@@ -15,7 +15,8 @@
   "Run a restartable system in the Repl"
   []
   (comp
-   (environ :env {:keypair-path (str (System/getProperty "user.home") "/certificaat/keypair.pem")
+   (environ :env {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+                  :keypair-filename "keypair.pem"
                   :acme-server-uri "https://acme-staging.api.letsencrypt.org/directory"
                   :acme-uri "acme://letsencrypt.org/staging"
                   :acme-contact "mailto:daniel.szmulewicz@gmail.com"})
