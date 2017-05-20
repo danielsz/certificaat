@@ -14,9 +14,9 @@
     reg))
 
 (defn create
-  ([] (let [keypair (account/load-from-disk (str (:config-dir env) (:keypair-filename env)))
-            contact (:acme-contact env)
-            acme-uri (:acme-uri env)]
+  ([] (let [keypair (account/load (str (:certificaat-config-dir env) (:certificaat-keypair-filename env)))
+            contact (:certificaat-acme-contact env)
+            acme-uri (:certificaat-acme-uri env)]
         (create keypair acme-uri contact)))
   ([keypair acme-uri contact] (let [session (session/create keypair acme-uri)]
                                 (try

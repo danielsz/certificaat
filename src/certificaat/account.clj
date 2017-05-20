@@ -16,13 +16,13 @@
 
 (defn persist
   ([] (let [keypair (keypair)
-            path (str (:config-dir env) (:keypair-filename env))]
+            path (str (:certificaat-config-dir env) (:certificaat-keypair-filename env))]
         (persist keypair path)))
   ([keypair path] (let [fw (FileWriter. path)]
                     (KeyPairUtils/writeKeyPair keypair fw))))
 
-(defn load-from-disk
-  ([] (load-from-disk (str (:config-dir env) (:keypair-filename env))))
+(defn load
+  ([] (load (str (:certificaat-config-dir env) (:certificaat-keypair-filename env))))
   ([path] (let [fr (FileReader. path)]
             (KeyPairUtils/readKeyPair fr))))
 
