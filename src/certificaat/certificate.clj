@@ -4,6 +4,7 @@
             [environ.core :refer [env]]
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j.util CSRBuilder CertificateUtils]
+           [org.shredzone.acme4j.exception AcmeUnauthorizedException]
            [java.io FileWriter FileReader]))
 
 

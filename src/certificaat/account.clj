@@ -7,23 +7,16 @@
 
 (Security/addProvider (new org.bouncycastle.jce.provider.BouncyCastleProvider))
 
-(defn keypair [& {:keys [type] :or {type :rsa}}]
-  {:pre [(some #{type} [:rsa :ec])]}
-  (let [keypair (case type
-                  :rsa (KeyPairUtils/createKeyPair 2048)
+(defn keypair [& {:keys [key-type key-size] :or {key-type :rsa key-size 2048}}]
+  (let [keypair (case key-type
+                  :rsa (KeyPairUtils/createKeyPair key-size)
                   :ec (KeyPairUtils/createECKeyPair "secp256r1"))]
     keypair))
 
-(defn persist
-  ([] (let [keypair (keypair)
-            path (str (:certificaat-config-dir env) (:certificaat-keypair-filename env))]
-        (persist keypair path)))
-  ([keypair path] (let [fw (FileWriter. path)]
-                    (KeyPairUtils/writeKeyPair keypair fw))))
+(defn persist [keypair path]
+  (let [fw (FileWriter. path)]
+    (KeyPairUtils/writeKeyPair keypair fw)))
 
-(defn load
-  ([] (load (str (:certificaat-config-dir env) (:certificaat-keypair-filename env))))
-  ([path] (let [fr (FileReader. path)]
-            (KeyPairUtils/readKeyPair fr))))
-
-
+(defn load [path]
+  (let [fr (FileReader. path)]
+    (KeyPairUtils/readKeyPair fr)))
