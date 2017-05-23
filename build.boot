@@ -3,6 +3,7 @@
  :resource-paths #{"resources"}
  :dependencies '[[org.clojure/clojure "1.9.0-alpha16"]
                  [org.clojure/core.async "0.3.442"]
+                 [org.danielsz/lang-utils "0.1.0-SNAPSHOT"]
                  [org.shredzone.acme4j/acme4j-client "0.10"]
                  [org.shredzone.acme4j/acme4j-utils "0.10"]
                  [org.clojure/tools.logging "0.3.1"]

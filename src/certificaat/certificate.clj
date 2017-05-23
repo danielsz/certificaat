@@ -8,35 +8,38 @@
            [java.io FileWriter FileReader]))
 
 
-(defn prepare []
-  (let [keypair (account/load (str (:certificaat-config-dir env) (:certificaat-domain-keypair-filename env)))]
-    (doto (CSRBuilder.)
-      (.addDomain (:certificaat-domain env))
-      (.setOrganization "Sapiens Sapiens")
+(defn prepare [keypair domain organization & additional-domains]
+  (let [builder (CSRBuilder.)]
+    (when additional-domains
+      (doseq [domain additional-domains]
+        (.addDomain domain)))
+    (doto builder
+      (.addDomain domain)
+      (.setOrganization organization)
       (.sign keypair))))
 
-(defn persist-certificate-request [csrb]
-  (let [fw (FileWriter. (str (:certificaat-config-dir env) (:certificaat-domain env) ".csr"))]
+(defn persist-certificate-request [csrb config-dir domain]
+  (let [fw (FileWriter. (str config-dir domain ".csr"))]
     (.write csrb fw)))
 
-(defn load-certificate-request []
-  (let [input (io/input-stream (str (:certificaat-config-dir env) (:certificaat-domain env) ".csr"))]
+(defn load-certificate-request [config-dir domain]
+  (let [input (io/input-stream (str config-dir domain ".csr"))]
     (CertificateUtils/readCSR input)))
 
-(defn request [csrb]
-  (.requestCertificate (registration/create) (.getEncoded csrb)))
+(defn request [csrb reg]
+  (.requestCertificate reg (.getEncoded csrb)))
 
 (defn download [cert]
   [(.download cert) (.downloadChain cert)])
 
-(defn persist []
-  (let [[cert chain] (download (request (prepare)))
-        fw (FileWriter. (str (:certificaat-config-dir env) "cert-chain.crt"))]
+(defn persist [config-dir cert]
+  (let [[cert chain] (download cert)
+        fw (FileWriter. (str config-dir "cert-chain.crt"))]
     (CertificateUtils/writeX509CertificateChain fw cert chain)))
 
 (defn delete [cert]
   (.revoke cert))
 
-(defn check-expiry []
-  (let [cert (io/input-stream (str (:certificaat-config-dir env) "cert-chain.crt"))]
+(defn check-expiry [config-dir]
+  (let [cert (io/input-stream (str config-dir "cert-chain.crt"))]
     (.getNotAfter (CertificateUtils/readX509Certificate cert))))

@@ -5,7 +5,7 @@
             [environ.core :refer [env]])
   (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge TlsSni01Challenge TlsSni02Challenge OutOfBand01Challenge]
            [org.shredzone.acme4j Status]
-           [org.shredzone.acme4j.exception AcmeRetryAfterException]))
+           [org.shredzone.acme4j.exception AcmeRetryAfterException AcmeServerException]))
 
 (defn http [challenge domain]
   (println "Please create a file in your web server's base directory.")
@@ -29,12 +29,15 @@
   (.findCombination auth (into-array String challenges)))
 
 (defn accept [challenge]
-  (.trigger challenge)
+  (try (.trigger challenge)
+       (catch AcmeServerException e
+         (log/error "Please run certificaat authorize again")
+         (throw e)))
   (let [c (chan)]
     (a/thread (loop [y 1
                      ms nil]
                 (<!! (a/timeout (or ms 5000)))
-                (log/info "Retrieving status, attempt" y)
+                (log/info "Retrieving challenge status, attempt" y)
                 (let [status (log/spyf "status %s" (.getStatus challenge))]
                   (if (or (= status Status/VALID) (= status Status/INVALID) (> y 10))
                     status
@@ -43,6 +46,5 @@
                                      (catch AcmeRetryAfterException e
                                        (log/error (.getMessage e))
                                        (.getRetryAfter e))))))))))
-
-#_ (defn restore []
-     (Challenge/bind session (.getLocation challenge)))
+(defn restore [session uri]
+  (Challenge/bind session uri))
