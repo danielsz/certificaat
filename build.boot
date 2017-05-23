@@ -6,7 +6,7 @@
                  [org.shredzone.acme4j/acme4j-client "0.10"]
                  [org.shredzone.acme4j/acme4j-utils "0.10"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [ch.qos.logback/logback-classic "1.2.1"]
+                 [ch.qos.logback/logback-classic "1.2.3"]
                  [environ "1.1.0"]
                  [boot-environ "1.1.0"]])
 
@@ -23,7 +23,7 @@
                   :certificaat-acme-uri "acme://letsencrypt.org/staging"
                   :certificaat-acme-contact "mailto:daniel.szmulewicz@gmail.com"
                   :certificaat-domain "teamsocial.me"
-                  :certificaat-organization "sapiens sapien"
+                  :certificaat-organization "sapiens sapiens"
                   :certificaat-challenge-type "dns-01"})
    (watch :verbose true)
    (notify :visual true)

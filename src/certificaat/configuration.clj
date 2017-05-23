@@ -3,10 +3,10 @@
             [certificaat.account :as account]
             [environ.core :refer [env]]))
 
-(defn create-config-dir [config-dir]
-  (let [config-dir (io/file config-dir)]
-    (when (not (.isDirectory config-dir))
-      (.mkdir config-dir))))
+(defn create-dir [dir]
+  (let [dir (io/file dir)]
+    (when (not (.isDirectory dir))
+      (.mkdir dir))))
 
 (defn add-keypair [config-dir keypair-filename keypair]
   (let [keypair-file (io/file (str config-dir keypair-filename))]

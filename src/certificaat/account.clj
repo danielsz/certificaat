@@ -1,5 +1,6 @@
 (ns certificaat.account
-  (:require [environ.core :refer [env]])
+  (:require [environ.core :refer [env]]
+            [clojure.tools.logging :as log])
   (:import [org.shredzone.acme4j.util KeyPairUtils]
            [java.security Security]
            [org.bouncycastle.jce.provider BouncyCastleProvider]
@@ -7,7 +8,7 @@
 
 (Security/addProvider (new org.bouncycastle.jce.provider.BouncyCastleProvider))
 
-(defn keypair [& {:keys [key-type key-size] :or {key-type :rsa key-size 2048}}]
+(defn keypair [key-type key-size]
   (let [keypair (case key-type
                   :rsa (KeyPairUtils/createKeyPair key-size)
                   :ec (KeyPairUtils/createECKeyPair "secp256r1"))]
@@ -17,6 +18,9 @@
   (let [fw (FileWriter. path)]
     (KeyPairUtils/writeKeyPair keypair fw)))
 
-(defn load [path]
-  (let [fr (FileReader. path)]
-    (KeyPairUtils/readKeyPair fr)))
+(defn restore
+  ([path]
+   (let [fr (FileReader. path)]
+     (KeyPairUtils/readKeyPair fr)))
+  ([config-dir keypair-filename]
+   (restore (str config-dir keypair-filename))))

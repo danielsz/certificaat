@@ -1,8 +1,9 @@
 (ns certificaat.challenge
+  (:refer-clojure :exclude [find])
   (:require [clojure.core.async :as a :refer [<! <!! >!! chan thread go-loop]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]])
-  (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge]
+  (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge TlsSni01Challenge TlsSni02Challenge OutOfBand01Challenge]
            [org.shredzone.acme4j Status]
            [org.shredzone.acme4j.exception AcmeRetryAfterException]))
 
@@ -21,12 +22,13 @@
     (log/info (str "_acme-challenge." domain " IN TXT " (.getDigest challenge)))
     challenge))
 
-(defn find
-  ([auth] (find-challenge auth (:certificaat-challenge-type env)))
-  ([auth challenge-type]  (case challenge-type
-                            Dns01Challenge/TYPE (challenge/dns auth (:certificaat-domain env))
-                            Http01Challenge/TYPE (challenge/http auth (:certificaat-domain env)))))
-; (.findCombination auth (into-array String [Http01Challenge/TYPE Dns01Challenge/TYPE]))
+(defn find [auth challenge-type domain]
+  (case challenge-type
+    Dns01Challenge/TYPE (dns auth domain)
+    Http01Challenge/TYPE (http auth domain)))
+
+(defn find2 [auth challenges]
+  (.findCombination auth (into-array String challenges)))
 
 (defn accept [challenge]
   (.trigger challenge)
