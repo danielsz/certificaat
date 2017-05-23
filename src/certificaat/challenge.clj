@@ -7,27 +7,25 @@
            [org.shredzone.acme4j Status]
            [org.shredzone.acme4j.exception AcmeRetryAfterException]))
 
-(defn http [auth domain]
-  (let [challenge (.findChallenge auth Http01Challenge/TYPE)]
-    (log/info "Please create a file in your web server's base directory.")
-    (log/info "It must be reachable at:" (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
-    (log/info "File name:" (.getToken challenge))
-    (log/info "Authorization:" (.getAuthorization challenge))
-    (log/info "The file must not contain any leading or trailing whitespaces or line breaks!")
-    challenge))
+(defn http [challenge domain]
+  (println "Please create a file in your web server's base directory.")
+  (println "It must be reachable at:" (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
+  (println "File name:" (.getToken challenge))
+  (println "Content:" (.getAuthorization challenge))
+  (println "The file must not contain any leading or trailing whitespaces or line breaks!")
+  challenge)
 
-(defn dns [auth domain]
-  (let [challenge (.findChallenge auth Dns01Challenge/TYPE)]
-    (log/info "Please create a TXT record:")
-    (log/info (str "_acme-challenge." domain " IN TXT " (.getDigest challenge)))
-    challenge))
+(defn dns [challenge domain]
+  (println "Please create a TXT record:")
+  (println (str "_acme-challenge." domain " IN TXT " (.getDigest challenge)))
+  challenge)
 
-(defn find [auth challenge-type domain]
-  (case challenge-type
-    Dns01Challenge/TYPE (dns auth domain)
-    Http01Challenge/TYPE (http auth domain)))
+(defn display [challenge domain]
+  (case (.getType challenge)
+    "dns-01" (dns challenge domain)
+    "http-01" (http challenge domain)))
 
-(defn find2 [auth challenges]
+(defn find [auth challenges]
   (.findCombination auth (into-array String challenges)))
 
 (defn accept [challenge]

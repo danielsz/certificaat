@@ -90,12 +90,12 @@
               session (s/create keypair acme-uri)
               reg (r/restore session registration-uri)
               auth (h/create domain reg)
-              challenges (l/find2 auth challenges)]
+              challenges (l/find auth challenges)]
           (doseq [challenge challenges
                   i (range (count challenges))]
+            (l/display challenge domain)
             (spit (str config-dir "challenge" i ".uri") (.getLocation challenge)))))
       fileset)))
-
 
 (deftask certificaat-challenge []
   (with-pre-wrap fileset
