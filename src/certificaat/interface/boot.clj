@@ -118,8 +118,11 @@
                         :let [auth (h/create domain reg)
                               challenges (l/find auth challenges)]]                  
                   (doseq [challenge challenges
-                          i (range (count challenges))]
-                    (l/display challenge domain)
+                          i (range (count challenges))
+                          :let [explanation (l/explain challenge domain)]]
+                    (util/info explanation)
+                    (spit (str config-dir "challenge." domain "." (.getType challenge) ".txt") explanation)
+                    (spit (io/file tmp (str "challenge." domain "." (.getType challenge) ".txt")) explanation)
                     (spit (str config-dir "challenge." domain "." i ".uri") (.getLocation challenge))
                     (spit (io/file tmp (str "challenge." domain "." i ".uri")) (.getLocation challenge))))
             (next-task (-> fileset (boot/add-resource tmp) boot/commit!))))))))
@@ -216,3 +219,10 @@
   (comp
    (certificaat-challenge :domain "teamsocial.me")
    (certificaat-request :domain "teamsocial.me" :organisation "Sapiens Sapiens" :san ["www.teamsocial.me"])))
+
+(deftask molo []
+  (with-pre-wrap fileset
+    (util/info "hello world")
+    (let [input (read-line)]
+      (println input))
+    fileset))
