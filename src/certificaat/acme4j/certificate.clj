@@ -10,11 +10,11 @@
 
 (defn prepare [keypair domain organization & [additional-domains]]
   (let [builder (CSRBuilder.)]
+    (.addDomain builder domain)
     (when additional-domains
       (doseq [domain additional-domains]
         (.addDomain builder domain)))
     (doto builder
-      (.addDomain domain)
       (.setOrganization organization)
       (.sign keypair))))
 

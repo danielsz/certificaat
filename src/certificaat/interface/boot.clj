@@ -208,11 +208,11 @@
 
 (deftask polo []
   (comp
-   (certificaat-setup :domain "www.teamsocial.me")
-   (certificaat-register :acme-contact "mailto:daniel.szmulewicz@gmail.com")
-   (certificaat-authorize :domain "www.teamsocial.me" :challenges #{"dns-01"})))
+   (certificaat-setup :domain "teamsocial.me")
+   (certificaat-register :domain "teamsocial.me" :acme-contact "mailto:daniel.szmulewicz@gmail.com")
+   (certificaat-authorize :domain "teamsocial.me" :challenges #{"dns-01"} :san ["www.teamsocial.me"])))
 
 (deftask kolo []
   (comp
-   (certificaat-challenge)
+   (certificaat-challenge :domain "teamsocial.me")
    (certificaat-request :domain "teamsocial.me" :organisation "Sapiens Sapiens" :san ["www.teamsocial.me"])))
