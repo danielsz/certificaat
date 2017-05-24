@@ -49,6 +49,7 @@
   "Certificaat registration with ACME server. Will create the account, show the TOS, and save the registration URI."
   [d config-dir CONFIG-DIR str "The configuration directory for certificaat. Follows XDG folders convention."
    k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
+   m domain DOMAIN str "The domain you wish to authorize"
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."
    c acme-contact ACME-CONTACT str "mailto:daniel.szmulewicz@gmail.com"]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
@@ -79,7 +80,8 @@
    k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."
    m domain DOMAIN str "The domain you wish to authorize"
-   c challenges CHALLENGES #{str} "The challenges you can complete"]
+   c challenges CHALLENGES #{str} "The challenges you can complete"
+   s san SAN [str] "Subject Alternative Name (SAN). Additional domains to be authorized."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"
@@ -95,7 +97,12 @@
                         (log/error (ex-data e))
                         (util/fail (*usage*)))
                       e)
-          (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri domain :domain challenges :challenges} input 
+          (let [{config-dir :config-dir
+                 keypair-filename :keypair-filename
+                 acme-uri :acme-uri
+                 domain :domain
+                 san :san
+                 challenges :challenges} input 
                 keypair (a/restore config-dir keypair-filename)
                 registration-uri (new URI (slurp (or
                                                   (some-> (boot/tmp-get fileset "registration.uri")
@@ -103,20 +110,25 @@
                                                   (str config-dir "registration.uri"))))
                 session (s/create keypair acme-uri)
                 reg (r/restore session registration-uri)
-                auth (h/create domain reg)
-                challenges (l/find auth challenges)
-                tmp (boot/tmp-dir!)]
-            (doseq [challenge challenges
-                    i (range (count challenges))]
-              (l/display challenge domain)
-              (spit (str config-dir "challenge." domain "." i ".uri") (.getLocation challenge))
-              (spit (io/file tmp (str "challenge." domain "." i ".uri")) (.getLocation challenge)))
+                tmp (boot/tmp-dir!)
+                domains (if san
+                          (conj san domain)
+                          [domain])]
+            (doseq [domain domains
+                        :let [auth (h/create domain reg)
+                              challenges (l/find auth challenges)]]                  
+                  (doseq [challenge challenges
+                          i (range (count challenges))]
+                    (l/display challenge domain)
+                    (spit (str config-dir "challenge." domain "." i ".uri") (.getLocation challenge))
+                    (spit (io/file tmp (str "challenge." domain "." i ".uri")) (.getLocation challenge))))
             (next-task (-> fileset (boot/add-resource tmp) boot/commit!))))))))
 
 (deftask certificaat-challenge
   "Certificaat will attempt to complete all challenges."
   [d config-dir CONFIG-DIR str "The configuration directory for certificaat. Follows XDG folders convention."
    k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
+   m domain DOMAIN str "The domain you wish to authorize"
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
