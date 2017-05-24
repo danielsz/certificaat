@@ -1,7 +1,7 @@
-(ns certificaat.registration
-  (:require [certificaat.account :as account]
-            [certificaat.session :as session]
-            [certificaat.tentoontenstelling :as t]
+(ns certificaat.acme4j.registration
+  (:require [certificaat.acme4j.account :as account]
+            [certificaat.acme4j.session :as session]
+            [certificaat.util.tentoonstelling :as t]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]])
   (:import [org.shredzone.acme4j Registration RegistrationBuilder]

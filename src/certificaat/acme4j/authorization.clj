@@ -1,8 +1,8 @@
-(ns certificaat.authorization
+(ns certificaat.acme4j.authorization
   (:require [clojure.core.async :as a :refer [<!!]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
-            [certificaat.session :as session])
+            [certificaat.acme4j.session :as session])
   (:import [org.shredzone.acme4j Authorization]
            [org.shredzone.acme4j.challenge Http01Challenge Dns01Challenge]))
 
@@ -14,7 +14,7 @@
 (defn delete [auth]
   (.deactivate auth))
 
-#_ (defn restore []
-     (Authorization/bind session (.getLocation auth)))
+(defn restore [session uri]
+     (Authorization/bind session uri))
 
-;(<!!  (challenge/accept challenge))
+

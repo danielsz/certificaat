@@ -1,6 +1,6 @@
-(ns certificaat.session
+(ns certificaat.acme4j.session
   (:require
-   [certificaat.account :as account]
+   [certificaat.acme4j.account :as account]
    [clojure.tools.logging :as log]
    [environ.core :refer [env]])
   (:import [org.shredzone.acme4j Session]))

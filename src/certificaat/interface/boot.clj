@@ -1,21 +1,20 @@
-(ns certificaat.boot
+(ns certificaat.interface.boot
   (:require [clojure.core.async :refer [<!!]]
             [clojure.tools.logging :as log]
             [certificaat.domain :as d]
-            [certificaat.configuration :as c]
-            [certificaat.authorization :as h]
-            [certificaat.session :as s]
-            [certificaat.challenge :as l]
-            [certificaat.account :as a]
-            [certificaat.registration :as r]
-            [certificaat.certificate :as t]
+            [certificaat.util.configuration :as c]
+            [certificaat.acme4j.authorization :as h]
+            [certificaat.acme4j.session :as s]
+            [certificaat.acme4j.challenge :as l]
+            [certificaat.acme4j.account :as a]
+            [certificaat.acme4j.registration :as r]
+            [certificaat.acme4j.certificate :as t]
             [boot.core :as boot :refer [deftask with-pre-wrap]]
             [boot.util :as util]
             [clojure.java.io :as io]
             [clojure.string :as str])
   (:import java.net.URI
            [org.shredzone.acme4j Status]))
-
 
 (deftask certificaat-setup
   "Certificaat setup. Will create the configuration directory and create the account keys."
@@ -24,7 +23,7 @@
    m domain DOMAIN str "The domain you wish to authorize"
    t key-type KEY-TYPE kw "The key type, one of RSA or Elliptic Curve."
    s key-size KEY-SIZE int "Key length used to create the private key used to register the ACME account."]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :key-type :rsa
                   :key-size 2048}
@@ -52,7 +51,7 @@
    k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."
    c acme-contact ACME-CONTACT str "mailto:daniel.szmulewicz@gmail.com"]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"}
         input (try
@@ -81,7 +80,7 @@
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."
    m domain DOMAIN str "The domain you wish to authorize"
    c challenges CHALLENGES #{str} "The challenges you can complete"]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"
                   :challenges #{"http-01"}}
@@ -119,7 +118,7 @@
   [d config-dir CONFIG-DIR str "The configuration directory for certificaat. Follows XDG folders convention."
    k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"}
         input (try
@@ -151,8 +150,8 @@
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."
    m domain DOMAIN str "The domain you wish to authorize"
    o organisation ORGANISATION str "The organisation you with to register with the cerfiticate"
-   a additional-domains DOMAINS [str] "Additional domains you already authorized with your account"]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+   s san SAN [str] "Subject Alternative Name (SAN). Additional domains to be authorized."]
+  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"}
         input (try
@@ -165,7 +164,12 @@
                       (log/error (ex-data e))
                       (util/fail (*usage*)))
                     e)
-        (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri domain :domain organisation :organisation} input 
+        (let [{config-dir :config-dir
+               keypair-filename :keypair-filename
+               acme-uri :acme-uri
+               domain :domain
+               organisation :organisation
+               san :san} input 
               keypair (a/restore config-dir keypair-filename)
               domain-keypair (a/restore config-dir (str domain "-keypair.pem"))
               registration-uri (new URI (slurp (or
@@ -174,7 +178,7 @@
                                                   (str config-dir "registration.uri"))))
               session (s/create keypair acme-uri)
               reg (r/restore session registration-uri)
-              csrb (t/prepare domain-keypair domain organisation)
+              csrb (t/prepare domain-keypair domain organisation (when san san))
               cert (t/request csrb reg)]
           (t/persist-certificate-request csrb config-dir domain)
           (t/persist config-dir cert)))
@@ -192,11 +196,11 @@
 
 (deftask polo []
   (comp
-   (certificaat-setup :domain "teamsocial.me")
+   (certificaat-setup :domain "www.teamsocial.me")
    (certificaat-register :acme-contact "mailto:daniel.szmulewicz@gmail.com")
-   (certificaat-authorize :domain "teamsocial.me" :challenges #{"dns-01"})))
+   (certificaat-authorize :domain "www.teamsocial.me" :challenges #{"dns-01"})))
 
 (deftask kolo []
   (comp
    (certificaat-challenge)
-   (certificaat-request :domain "teamsocial.me" :organisation "Sapiens Sapiens")))
+   (certificaat-request :domain "teamsocial.me" :organisation "Sapiens Sapiens" :san ["www.teamsocial.me"])))

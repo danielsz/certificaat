@@ -1,4 +1,4 @@
-(ns certificaat.account
+(ns certificaat.acme4j.account
   (:require [environ.core :refer [env]]
             [clojure.tools.logging :as log])
   (:import [org.shredzone.acme4j.util KeyPairUtils]

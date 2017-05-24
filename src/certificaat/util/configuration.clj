@@ -1,6 +1,6 @@
-(ns certificaat.configuration
+(ns certificaat.util.configuration
   (:require [clojure.java.io :as io]
-            [certificaat.account :as account]
+            [certificaat.acme4j.account :as account]
             [environ.core :refer [env]]))
 
 (defn create-dir [dir]

@@ -14,7 +14,7 @@
 (s/def ::key-size #{1024 2048 4096})
 (s/def ::key-type #{:rsa :ec})
 (s/def ::domain string?)
-(s/def ::additional-domains (s/coll-of ::domain :kind vector?))
+(s/def ::san (s/coll-of ::domain :kind vector?))
 (s/def ::organisation string?)
 (s/def ::challenge #{"http-01" "dns-01" "tls-sni-01" "tls-sni-02" "oob-01"})
 (s/def ::challenges (s/coll-of ::challenge :kind set?))

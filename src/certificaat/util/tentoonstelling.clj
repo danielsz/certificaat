@@ -1,4 +1,4 @@
-(ns certificaat.tentoontenstelling
+(ns certificaat.util.tentoonstelling
   (:require [clojure.tools.logging :as log])
   (:import [javax.swing JOptionPane]
            [java.awt GraphicsEnvironment]

@@ -1,6 +1,6 @@
-(ns certificaat.certificate
-  (:require [certificaat.account :as account]
-            [certificaat.registration :as registration]
+(ns certificaat.acme4j.certificate
+  (:require [certificaat.acme4j.account :as account]
+            [certificaat.acme4j.registration :as registration]
             [environ.core :refer [env]]
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j.util CSRBuilder CertificateUtils]
@@ -8,11 +8,11 @@
            [java.io FileWriter FileReader]))
 
 
-(defn prepare [keypair domain organization & additional-domains]
+(defn prepare [keypair domain organization & [additional-domains]]
   (let [builder (CSRBuilder.)]
     (when additional-domains
       (doseq [domain additional-domains]
-        (.addDomain domain)))
+        (.addDomain builder domain)))
     (doto builder
       (.addDomain domain)
       (.setOrganization organization)

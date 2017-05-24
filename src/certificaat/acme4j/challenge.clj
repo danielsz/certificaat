@@ -1,4 +1,4 @@
-(ns certificaat.challenge
+(ns certificaat.acme4j.challenge
   (:refer-clojure :exclude [find])
   (:require [clojure.core.async :as a :refer [<! <!! >!! chan thread go-loop]]
             [clojure.tools.logging :as log]
