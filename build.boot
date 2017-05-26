@@ -9,6 +9,7 @@
                  [org.shredzone.acme4j/acme4j-utils "0.10"]
                  [org.clojure/tools.logging "0.3.1"]
                  [ch.qos.logback/logback-classic "1.2.3"]
+                 [org.clojure/tools.cli "0.3.5"]
                  [ring "1.6.1"]
                  [environ "1.1.0"]
                  [boot-environ "1.1.0"]])
@@ -45,7 +46,6 @@
         :version +version+)
    (uber)
    (jar :main 'certificaat.core :file (str +project+ ".jar"))
-   ;(target :dir ["target"])
    (bin :output-dir "bin")))
 
 

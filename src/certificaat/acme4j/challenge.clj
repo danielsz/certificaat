@@ -8,18 +8,18 @@
            [org.shredzone.acme4j Status]
            [org.shredzone.acme4j.exception AcmeRetryAfterException AcmeServerException]))
 
-(defn challenge-text [& lines] (str/join "\n" lines))
-
 (defn http [challenge domain]
-  (challenge-text "Please create a file in your web server's base directory."
-                  (str  "It must be reachable at:" (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
-                  (str "File name:" (.getToken challenge))
-                  (str "Content:" (.getAuthorization challenge))
-                  "The file must not contain any leading or trailing whitespaces or line breaks!"))
+  (->> ["Please create a file in your web server's base directory."
+        (str  "It must be reachable at:" (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
+        (str "File name:" (.getToken challenge))
+        (str "Content:" (.getAuthorization challenge))
+        "The file must not contain any leading or trailing whitespaces or line breaks!"]
+       (str/join \newline)))
 
 (defn dns [challenge domain]
-  (challenge-text "Please create a TXT record in your DNS settings:"
-                  (str "_acme-challenge." domain " IN TXT " (.getDigest challenge))))
+  (->> ["Please create a TXT record in your DNS settings:"
+       (str "_acme-challenge." domain " IN TXT " (.getDigest challenge))]
+      (str/join \newline)))
 
 (defn explain [challenge domain]
   (case (.getType challenge)
@@ -32,7 +32,7 @@
 (defn accept [challenge]
   (try (.trigger challenge)
        (catch AcmeServerException e
-         (log/error "Please run certificaat authorize again")
+         (log/error "Please authorize again.")
          (throw e)))
   (let [c (chan)]
     (a/thread (loop [y 1

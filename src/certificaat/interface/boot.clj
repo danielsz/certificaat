@@ -19,10 +19,10 @@
 (deftask certificaat-setup
   "Certificaat setup. Will create the configuration directory and create the account keys."
   [d config-dir CONFIG-DIR str "The configuration directory for certificaat. Follows XDG folders convention."
-   k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
+   k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file used to register the ACME account."
    m domain DOMAIN str "The domain you wish to authorize"
    t key-type KEY-TYPE kw "The key type, one of RSA or Elliptic Curve."
-   s key-size KEY-SIZE int "Key length used to create the private key used to register the ACME account."]
+   s key-size KEY-SIZE int "Key length used to create a RSA private key."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :key-type :rsa
@@ -35,7 +35,7 @@
         Throwable (let [e input]
                     (if (= "Invalid input" (.getMessage e))
                       (log/error (ex-data e))
-                      (util/fail (*usage*)))
+                      (*usage*))
                     e)
         (let [{config-dir :config-dir key-type :key-type key-size :key-size keypair-filename :keypair-filename} input 
               keypair (a/keypair key-type key-size)
@@ -51,7 +51,7 @@
    k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
    m domain DOMAIN str "The domain you wish to authorize"
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."
-   c acme-contact ACME-CONTACT str "mailto:daniel.szmulewicz@gmail.com"]
+   c contact CONTACT str "The email address used to send you expiry notices (mailto:me@example.com)"]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"}
@@ -64,11 +64,11 @@
           Throwable (let [e input]
                       (if (= "Invalid input" (.getMessage e))
                         (log/error (ex-data e))
-                        (util/fail (*usage*)))
+                        (*usage*))
                       e)
-          (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri acme-contact :acme-contact} input 
+          (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri contact :contact} input 
                 keypair (a/restore config-dir keypair-filename)
-                registration (r/create keypair acme-uri acme-contact)
+                registration (r/create keypair acme-uri contact)
                 tmp (boot/tmp-dir!)]
             (spit (str config-dir "registration.uri") (.getLocation registration))
             (spit (io/file tmp "registration.uri") (.getLocation registration))
@@ -81,7 +81,7 @@
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."
    m domain DOMAIN str "The domain you wish to authorize"
    c challenges CHALLENGES #{str} "The challenges you can complete"
-   s san SAN [str] "Subject Alternative Name (SAN). Additional domains to be authorized."]
+   s san SAN #{str} "Subject Alternative Name (SAN). Additional domains to be authorized."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"
@@ -95,7 +95,7 @@
           Throwable (let [e input]
                       (if (= "Invalid input" (.getMessage e))
                         (log/error (ex-data e))
-                        (util/fail (*usage*)))
+                        (*usage*))
                       e)
           (let [{config-dir :config-dir
                  keypair-filename :keypair-filename
@@ -120,7 +120,7 @@
                   (doseq [challenge challenges
                           i (range (count challenges))
                           :let [explanation (l/explain challenge domain)]]
-                    (util/info explanation)
+                    (util/info "%s\n" explanation)
                     (spit (str config-dir "challenge." domain "." (.getType challenge) ".txt") explanation)
                     (spit (io/file tmp (str "challenge." domain "." (.getType challenge) ".txt")) explanation)
                     (spit (str config-dir "challenge." domain "." i ".uri") (.getLocation challenge))
@@ -144,7 +144,7 @@
         Throwable (let [e input]
                     (if (= "Invalid input" (.getMessage e))
                       (log/error (ex-data e))
-                      (util/fail (*usage*)))
+                      (*usage*))
                     e)
         (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri} input
               keypair (a/restore config-dir keypair-filename)
@@ -154,8 +154,8 @@
                   :let [uri (new URI (slurp frozen-challenge))
                         challenge (l/restore session uri)]]
             (if (= Status/VALID (<!! (l/accept challenge)))
-              (util/info "Well done, you've succcessfully associated your domain with your account. You can now retrieve your certificate.")
-              (util/warn "Sorry, something went wrong")))))
+              (util/info "Well done, you've succcessfully associated your domain with your account. You can now retrieve your certificate.\n")
+              (util/warn "Sorry, something went wrong\n")))))
       fileset)))
 
 (deftask certificaat-request
@@ -165,7 +165,7 @@
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."
    m domain DOMAIN str "The domain you wish to authorize"
    o organisation ORGANISATION str "The organisation you with to register with the cerfiticate"
-   s san SAN [str] "Subject Alternative Name (SAN). Additional domains to be authorized."]
+   s san SAN #{str} "Subject Alternative Name (SAN). Additional domains to be authorized."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"}
@@ -177,7 +177,7 @@
         Throwable (let [e input]
                     (if (= "Invalid input" (.getMessage e))
                       (log/error (ex-data e))
-                      (util/fail (*usage*)))
+                      (*usage*))
                     e)
         (let [{config-dir :config-dir
                keypair-filename :keypair-filename
@@ -206,19 +206,20 @@
 
 (deftask certificaat-info []
   (with-pre-wrap fileset
+    (*usage*)
     (util/info "hello world")
     fileset))
 
 (deftask polo []
   (comp
    (certificaat-setup :domain "teamsocial.me")
-   (certificaat-register :domain "teamsocial.me" :acme-contact "mailto:daniel.szmulewicz@gmail.com")
-   (certificaat-authorize :domain "teamsocial.me" :challenges #{"dns-01"} :san ["www.teamsocial.me"])))
+   (certificaat-register :domain "teamsocial.me" :contact "mailto:daniel.szmulewicz@gmail.com")
+   (certificaat-authorize :domain "teamsocial.me" :challenges #{"dns-01"} :san #{"www.teamsocial.me"})))
 
 (deftask kolo []
   (comp
    (certificaat-challenge :domain "teamsocial.me")
-   (certificaat-request :domain "teamsocial.me" :organisation "Sapiens Sapiens" :san ["www.teamsocial.me"])))
+   (certificaat-request :domain "teamsocial.me" :organisation "Sapiens Sapiens" :san #{"www.teamsocial.me"})))
 
 (deftask molo []
   (with-pre-wrap fileset
