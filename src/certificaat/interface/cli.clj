@@ -1,5 +1,6 @@
 (ns certificaat.interface.cli
-  (:require [clojure.tools.cli :refer [parse-opts]]
+  (:require
+            [clojure.tools.cli :refer [parse-opts]]
             [certificaat.domain :as domain :refer [validate]]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
@@ -25,7 +26,6 @@
     :assoc-fn (fn [m k v] (update-in m [k] #(into #{} (set/union % v))))
     :validate [#(s/valid? ::domain/san %) "Must be a valid domain"]]
    ["-c" "--challenges CHALLENGES" "A challenge you can complete. You can repeat this option."
-    :default #{"http-01"}
     :parse-fn #(set [%])
     :assoc-fn (fn [m k v] (update-in m [k] #(into #{} (set/union % v))))
     :validate [#(s/valid? ::domain/challenges %) "Must be one of dns-01 or http-01"]]
@@ -78,10 +78,11 @@
       :else {:exit-message (usage summary)})))
 
 (defn certificaat [args]
-   (let [{:keys [action options exit-message ok?]} (validate-args args)]
+  (let [{:keys [action options exit-message ok?]} (validate-args args)
+        options (update-in options [:config-dir] #(str % (:domain options) "/"))]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
-        "start"  (println "start" options)
-        "stop"   (println "stop" options)
+        "authorize" (println "authorize" options)
+        "stop"   (println "request" options)
         "status" (println "status" options)))))
