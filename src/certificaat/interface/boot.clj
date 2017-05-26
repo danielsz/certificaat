@@ -27,17 +27,17 @@
                   :keypair-filename "acme-account-keypair.pem"
                   :key-type :rsa
                   :key-size 2048}
-        input (try
+        options (try
                 (d/validate ::d/certificaat-setup (merge defaults *opts*))
                 (catch Exception e e))]
     (with-pre-wrap fileset
-      (condp #(isa? %2 %1) (type input)
-        Throwable (let [e input]
-                    (if (= "Invalid input" (.getMessage e))
+      (condp #(isa? %2 %1) (type options)
+        Throwable (let [e options]
+                    (if (= "Invalid options" (.getMessage e))
                       (log/error (ex-data e))
                       (*usage*))
                     e)
-        (let [{config-dir :config-dir key-type :key-type key-size :key-size keypair-filename :keypair-filename} input 
+        (let [{config-dir :config-dir key-type :key-type key-size :key-size keypair-filename :keypair-filename} options
               keypair (a/keypair key-type key-size)
               domain-keypair (a/keypair key-type key-size)]
           (c/create-dir config-dir)
@@ -55,18 +55,18 @@
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"}
-        input (try
+        options (try
                 (d/validate ::d/certificaat-register (merge defaults *opts*))
                 (catch Exception e e))]
     (fn [next-task]
       (fn [fileset] 
-        (condp #(isa? %2 %1) (type input)
-          Throwable (let [e input]
-                      (if (= "Invalid input" (.getMessage e))
+        (condp #(isa? %2 %1) (type options)
+          Throwable (let [e options]
+                      (if (= "Invalid options" (.getMessage e))
                         (log/error (ex-data e))
                         (*usage*))
                       e)
-          (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri contact :contact} input 
+          (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri contact :contact} options
                 keypair (a/restore config-dir keypair-filename)
                 registration (r/create keypair acme-uri contact)
                 tmp (boot/tmp-dir!)]
@@ -86,14 +86,14 @@
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"
                   :challenges #{"http-01"}}
-        input (try
+        options (try
                 (d/validate ::d/certificaat-authorize (merge defaults *opts*))
                 (catch Exception e e))]
     (fn [next-task]
       (fn [fileset] 
-        (condp #(isa? %2 %1) (type input)
-          Throwable (let [e input]
-                      (if (= "Invalid input" (.getMessage e))
+        (condp #(isa? %2 %1) (type options)
+          Throwable (let [e options]
+                      (if (= "Invalid options" (.getMessage e))
                         (log/error (ex-data e))
                         (*usage*))
                       e)
@@ -102,7 +102,7 @@
                  acme-uri :acme-uri
                  domain :domain
                  san :san
-                 challenges :challenges} input 
+                 challenges :challenges} options
                 keypair (a/restore config-dir keypair-filename)
                 registration-uri (new URI (slurp (or
                                                   (some-> (boot/tmp-get fileset "registration.uri")
@@ -136,17 +136,17 @@
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"}
-        input (try
+        options (try
                 (d/validate ::d/certificaat-challenge (merge defaults *opts*))
                 (catch Exception e e))]
     (with-pre-wrap fileset
-      (condp #(isa? %2 %1) (type input)
-        Throwable (let [e input]
-                    (if (= "Invalid input" (.getMessage e))
+      (condp #(isa? %2 %1) (type options)
+        Throwable (let [e options]
+                    (if (= "Invalid options" (.getMessage e))
                       (log/error (ex-data e))
                       (*usage*))
                     e)
-        (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri} input
+        (let [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri} options
               keypair (a/restore config-dir keypair-filename)
               session (s/create keypair acme-uri)
               frozen-challenges (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file config-dir)))]
@@ -169,13 +169,13 @@
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/" domain "/")
                   :keypair-filename "acme-account-keypair.pem"
                   :acme-uri "acme://letsencrypt.org/staging"}
-        input (try
+        options (try
                 (d/validate ::d/certificaat-request (merge defaults *opts*))
                 (catch Exception e e))]
     (with-pre-wrap fileset
-      (condp #(isa? %2 %1) (type input)
-        Throwable (let [e input]
-                    (if (= "Invalid input" (.getMessage e))
+      (condp #(isa? %2 %1) (type options)
+        Throwable (let [e options]
+                    (if (= "Invalid options" (.getMessage e))
                       (log/error (ex-data e))
                       (*usage*))
                     e)
@@ -184,7 +184,7 @@
                acme-uri :acme-uri
                domain :domain
                organisation :organisation
-               san :san} input 
+               san :san} options
               keypair (a/restore config-dir keypair-filename)
               domain-keypair (a/restore config-dir (str domain "-keypair.pem"))
               registration-uri (new URI (slurp (or
@@ -215,6 +215,19 @@
    (certificaat-setup :domain "teamsocial.me")
    (certificaat-register :domain "teamsocial.me" :contact "mailto:daniel.szmulewicz@gmail.com")
    (certificaat-authorize :domain "teamsocial.me" :challenges #{"dns-01"} :san #{"www.teamsocial.me"})))
+
+(defn stage-one [{domain :domain
+                  challenges :challenges
+                  config-dir :config-dir
+                  keypair-filename :keypair-filename
+                  acme-uri :acme-uri
+                  contact :contact
+                  san :san
+                  :as options}]
+  (boot/boot (comp
+              (certificaat-setup :domain domain)
+              (certificaat-register :domain domain :contact contact)
+              (certificaat-authorize :domain domain :challenges challenges :san san))))
 
 (deftask kolo []
   (comp
