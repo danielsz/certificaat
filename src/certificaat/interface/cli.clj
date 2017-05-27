@@ -2,7 +2,6 @@
   (:require [certificaat.kung-fu :as k]
             [clojure.tools.cli :refer [parse-opts]]
             [certificaat.domain :as domain :refer [validate]]
-            [certificaat.acme4j.challenge :as l]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [clojure.set :as set]
@@ -94,7 +93,7 @@
                       (doseq [[domain challenges] (k/authorize options reg)
                               i (range (count challenges))
                               challenge challenges
-                              :let [explanation (l/explain challenge domain)]]
+                              :let [explanation (k/explain challenge domain)]]
                         (println explanation)
                         (spit (str config-dir domain "." (.getType challenge) ".challenge.txt") explanation)
                         (spit (str config-dir "challenge." domain "." i ".uri") (.getLocation challenge)))) 
@@ -107,3 +106,5 @@
         "renew" (let [reg (k/register options)]
                   (k/request options reg)) 
         "info" (println (k/info options))))))
+
+;; server start/stop

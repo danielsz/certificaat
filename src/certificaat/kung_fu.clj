@@ -31,6 +31,8 @@
         (r/restore session registration-uri))
       (let [keypair (a/restore config-dir keypair-filename)
             reg (r/create keypair acme-uri contact)]
+        (c/save-agreement config-dir reg)
+        (r/accept-agreement reg)
         (spit (str config-dir "registration.uri") (.getLocation reg))
         reg))))
 
@@ -64,3 +66,5 @@
   (try
     (t/check-expiry config-dir)
     (catch java.io.FileNotFoundException e (.getMessage e))))
+
+(def explain l/explain)

@@ -8,9 +8,9 @@
            [org.shredzone.acme4j.exception AcmeException AcmeConflictException]))
 
 (defn accept-agreement [reg]
-  (let [agreement (.getAgreement reg)]
-    (t/show-tos "Terms of Service:" agreement)
-    (.commit (.setAgreement (.modify reg) agreement))
+  (let [url (.getAgreement reg)]
+    (t/show-tos "Terms of Service:" "The agreement has been saved to disk. By clicking OK you are accepting the terms.")
+    (.commit (.setAgreement (.modify reg) url))
     (log/info "Agreement accepted")
     reg))
 
@@ -21,7 +21,7 @@
                         (.addContact contact))
             reg (.create builder session)]
         (log/info "Registered a new user, URI:" (.getLocation reg))
-        (accept-agreement reg))
+        reg)
       (catch AcmeConflictException e
         (let [reg (Registration/bind session (.getLocation e))]
           (log/warn "Account already exists, URI:" (.getLocation reg))

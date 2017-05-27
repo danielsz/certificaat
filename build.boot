@@ -2,7 +2,7 @@
  :source-paths   #{"src"}
  :resource-paths #{"resources"}
  :dependencies '[[adzerk/boot-jar2bin "1.1.0" :scope "test"]
-                 [org.clojure/clojure "1.9.0-alpha16"]
+                 [org.clojure/clojure "1.9.0-alpha17"]
                  [org.clojure/core.async "0.3.442"]
                  [org.danielsz/lang-utils "0.1.0-SNAPSHOT"]
                  [org.shredzone.acme4j/acme4j-client "0.10"]
@@ -10,6 +10,9 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [ch.qos.logback/logback-classic "1.2.3"]
                  [org.clojure/tools.cli "0.3.5"]
+                 [org.kohsuke/libpam4j "1.8"]
+                 [me.raynes/conch "0.8.0"]
+                 [clj-http "3.6.0"]
                  [ring "1.6.1"]
                  [environ "1.1.0"]
                  [boot-environ "1.1.0"]])

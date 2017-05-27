@@ -1,7 +1,6 @@
 (ns certificaat.interface.boot
   (:require [certificaat.kung-fu :as k]
             [certificaat.domain :as d]
-            [certificaat.acme4j.challenge :as l]
             [boot.core :as boot :refer [deftask with-pre-wrap]]
             [boot.util :as util]
             [clojure.java.io :as io]
@@ -62,7 +61,7 @@
           (doseq [[domain challenges] (k/authorize options reg)
                   i (range (count challenges))
                   challenge challenges
-                  :let [explanation (l/explain challenge domain)]]
+                  :let [explanation (k/explain challenge domain)]]
             (util/info "%s\n" explanation)
             (spit (str config-dir domain "." (.getType challenge) ".challenge.txt") explanation)
             (spit (str config-dir "challenge." domain "." i ".uri") (.getLocation challenge)))))
