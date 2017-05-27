@@ -1,10 +1,13 @@
 (ns certificaat.interface.cli
-  (:require
+  (:require [certificaat.kung-fu :as k]
             [clojure.tools.cli :refer [parse-opts]]
             [certificaat.domain :as domain :refer [validate]]
+            [certificaat.acme4j.challenge :as l]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clojure.core.async :refer [<!!]])
+  (:import [org.shredzone.acme4j Status]))
 
 (def cli-options
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."
@@ -14,9 +17,11 @@
     :default "acme-account-keypair.pem"
     :validate [#(s/valid? ::domain/keypair-filename %) "Must be a string"]]
    ["-t" "--key-type KEY-TYPE" "The key type, one of RSA or Elliptic Curve."
+    :default :rsa
     :parse-fn keyword
     :validate [#(s/valid? ::domain/key-type %) "Must be rsa or ec"]]
    ["-s" "--key-size KEY-SIZE" "Key length used to create a RSA private key."
+    :default 2048
     :parse-fn #(Integer/parseInt %)
     :validate [#(s/valid? ::domain/key-size %) "Must be 1024, 2048 or 4096"]]
    ["-m" "--domain DOMAIN" "The domain you wish to authorize"
@@ -40,7 +45,7 @@
    ["-h" "--help"]])
 
 (defn usage [options-summary]
-  (->> ["This is my program. There are many like it, but this one is mine."
+  (->> ["Certificaat. There are many like it, but this one is mine."
         ""
         "Usage: program-name [options] action"
         ""
@@ -48,9 +53,9 @@
         options-summary
         ""
         "Actions:"
-        "  start    Start a new server"
-        "  stop     Stop an existing server"
-        "  status   Print a server's status"
+        "  authorize   Authorize a domain with the ACME server. Will explain the challenge to accept."
+        "  request     Will attempt to complete all challenges and request the certificate if successful."
+        "  renew   Renew the certificate for an authorized domain."
         ""
         "Please refer to the manual page for more information."]
        (str/join \newline)))
@@ -74,7 +79,7 @@
       (:help options) {:exit-message (usage summary) :ok? true}
       errors {:exit-message (error-msg errors)}
       (and (= 1 (count arguments))
-           (#{"start" "stop" "status"} (first arguments))) {:action (first arguments) :options options}
+           (#{"authorize" "request" "renew" "info"} (first arguments))) {:action (first arguments) :options options}
       :else {:exit-message (usage summary)})))
 
 (defn certificaat [args]
@@ -83,6 +88,22 @@
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
-        "authorize" (println "authorize" options)
-        "stop"   (println "request" options)
-        "status" (println "status" options)))))
+        "authorize" (let [{config-dir :config-dir domain :domain} options
+                          _ (k/setup options)
+                          reg (k/register options)]
+                      (doseq [[domain challenges] (k/authorize options reg)
+                              i (range (count challenges))
+                              challenge challenges
+                              :let [explanation (l/explain challenge domain)]]
+                        (println explanation)
+                        (spit (str config-dir domain "." (.getType challenge) ".challenge.txt") explanation)
+                        (spit (str config-dir "challenge." domain "." i ".uri") (.getLocation challenge)))) 
+        "request"  (let [reg (k/register options)]
+                     (doseq [c (k/challenge options)]
+                       (if (= Status/VALID (<!! c))
+                         (println "Well done, you've succcessfully associated your domain with your account. You can now retrieve your certificate.")
+                         (println "Sorry, something went wrong.")))
+                     (k/request options reg))
+        "renew" (let [reg (k/register options)]
+                  (k/request options reg)) 
+        "info" (println (k/info options))))))

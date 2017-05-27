@@ -45,7 +45,7 @@
    (pom :project (symbol +project+)
         :version +version+)
    (uber)
-   (jar :main 'certificaat.core :file (str +project+ ".jar"))
+   (jar :main 'certificaat.core :file (str +project+ "-" +version+ ".jar"))
    (bin :output-dir "bin")))
 
 

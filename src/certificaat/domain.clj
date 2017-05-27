@@ -22,8 +22,8 @@
 (s/def ::challenge #{"http-01" "dns-01" "tls-sni-01" "tls-sni-02" "oob-01"})
 (s/def ::challenges (s/coll-of ::challenge :kind set?))
 (s/def ::certificaat-setup (s/keys :req-un [::config-dir ::keypair-filename ::domain ::key-size ::key-type]))
-(s/def ::certificaat-register (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::contact]))
-(s/def ::certificaat-authorize (s/keys :req-un [::config-dir ::keypair-filename ::domain ::challenges]))
+(s/def ::certificaat-authorize (s/keys :req-un [::config-dir ::keypair-filename ::domain ::challenges ::contact]))
 (s/def ::certificaat-challenge (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri]))
-(s/def ::certificaat-request (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::domain ::organisation]
-                                     :opt-un [::additional-domains]))
+(s/def ::certificaat-request (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::domain ::organisation ::contact]
+                                     :opt-un [::san]))
+(s/def ::certificaat-info (s/keys :req-un [::config-dir ::domain]))
