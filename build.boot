@@ -11,6 +11,7 @@
                  [ch.qos.logback/logback-classic "1.2.3"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.kohsuke/libpam4j "1.8"]
+                 [mvxcvi/puget "1.0.1"]
                  [me.raynes/conch "0.8.0"]
                  [clj-http "3.6.0"]
                  [ring "1.6.1"]

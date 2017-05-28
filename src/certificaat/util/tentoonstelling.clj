@@ -11,7 +11,7 @@
 
 (defmulti confirm-dialog (fn [title message] (GraphicsEnvironment/isHeadless)))
 (defmethod confirm-dialog true [title message] (do (println message)
-                                                   (println "Do you accept? (Please type Yes or no)")
+                                                   (println "Do you accept the terms? (Please type Yes or No)")
                                                    (let [option (read-line)]
                                                      (= "Yes" option))))
 (defmethod confirm-dialog false [title message] (let [option (JOptionPane/showConfirmDialog nil message title JOptionPane/OK_CANCEL_OPTION)]

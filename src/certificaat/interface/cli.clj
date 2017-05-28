@@ -1,14 +1,16 @@
 (ns certificaat.interface.cli
   (:require [certificaat.kung-fu :as k]
             [clojure.tools.cli :refer [parse-opts]]
-            [certificaat.domain :as domain :refer [validate]]
+            [certificaat.domain :as domain]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [clojure.set :as set]
+            [puget.printer :as puget]
             [clojure.core.async :refer [<!!]]
             [clojure.tools.logging :as log])
   (:import [org.shredzone.acme4j Status]
-           [org.shredzone.acme4j.exception AcmeServerException]))
+           [org.shredzone.acme4j.exception AcmeServerException]
+           [clojure.lang ExceptionInfo]))
 
 (def cli-options
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."
@@ -46,7 +48,7 @@
    ["-h" "--help"]])
 
 (defn usage [options-summary]
-  (->> ["Certificaat. There are many like it, but this one is mine."
+  (->> ["Certificaat. ACME client. Written in Clojure. Licensed under the BroaderPerspective License."
         ""
         "Usage: program-name [options] action"
         ""
@@ -57,8 +59,10 @@
         "  authorize   Authorize a domain with the ACME server. Will explain the challenge to accept."
         "  request     Will attempt to complete all challenges and request the certificate if successful."
         "  renew   Renew the certificate for an authorized domain."
+        "  info    Show the expiry date of the certificate"
         ""
-        "Please refer to the manual page for more information."]
+        "Please refer to the README on github for more information."
+        "https://github.com/danielsz/certificaat"]
        (str/join \newline)))
 
 
@@ -69,6 +73,14 @@
 (defn exit [status msg]
   (println msg)
   (System/exit status))
+
+(defn validate [spec options]
+  (try
+    (domain/validate ::domain/certificaat-info options)
+    (catch ExceptionInfo e
+      (puget/cprint (s/describe ::domain/certificaat-info))
+      (puget/cprint (ex-data e))
+      (exit 1 (.getMessage e)))))
 
 (defn validate-args
   "Validate command line arguments. Either return a map indicating the program
@@ -88,7 +100,8 @@
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
-        "authorize" (let [{config-dir :config-dir domain :domain} options
+        "authorize" (let [options (validate ::domain/certificaat-authorize options)
+                          {config-dir :config-dir domain :domain} options
                           _ (k/setup options)
                           reg (k/register options)]
                       (doseq [[name challenges] (k/authorize options reg)
@@ -98,7 +111,8 @@
                         (println explanation)
                         (spit (str config-dir domain "/" name "." (.getType challenge) ".challenge.txt") explanation)
                         (spit (str config-dir domain "/challenge." name "." i ".uri") (.getLocation challenge)))) 
-        "request"  (let [reg (k/register options)]
+        "request"  (let [options (validate ::domain/certificaat-request options)
+                         reg (k/register options)]
                      (try
                        (doseq [c (k/challenge options)
                                :let [resp (<!! c)]]
@@ -107,7 +121,9 @@
                            (println "Sorry, challenge failed." resp)))
                        (catch AcmeServerException e (exit 1 (.getMessage e))))
                      (k/request options reg))
-        "renew" (k/renew options)  
-        "info" (println (k/info options))))))
+        "renew" (let [options (validate ::domain/certificaat-renew options)]
+                  (k/renew options))
+        "info" (let [options (validate ::domain/certificaat-info options)]
+                  (puget/cprint (k/info options)))))))
 
 ;; server start/stop
