@@ -16,18 +16,18 @@
   (let [keypair (a/keypair key-type key-size)
         domain-keypair (a/keypair key-type key-size)
         domain-path (str config-dir domain "/")]
-    (io/make-parents (str domain-path "domain-keypair.pem"))
+    (io/make-parents (str domain-path "domain.key"))
     (c/add-keypair config-dir keypair-filename keypair)
-    (c/add-keypair domain-path "domain-keypair.pem" domain-keypair)))
+    (c/add-keypair domain-path "domain.key" domain-keypair)))
 
 (defn session [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri}]
   (let [keypair (a/restore config-dir keypair-filename)]
     (s/create keypair acme-uri)))
 
 (defn register [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri contact :contact :as options}]
-  (let [registration-filename (io/file (str config-dir "registration.uri"))]
-    (if (.exists registration-filename)
-      (let [registration-uri (new URI (slurp registration-filename))
+  (let [frozen-registration (io/file (str config-dir "registration.uri"))]
+    (if (.exists frozen-registration)
+      (let [registration-uri (new URI (slurp frozen-registration))
             session (session options)]
         (r/restore session registration-uri))
       (let [keypair (a/restore config-dir keypair-filename)
@@ -53,24 +53,24 @@
                 challenge (l/restore session uri)]]
       (l/accept challenge))))
 
-(defn request [{config-dir :config-dir keypair-filename :keypair-filename acme-uri :acme-uri domain :domain organisation :organisation san :san} reg]
+(defn get-certificate [{config-dir :config-dir domain :domain organisation :organisation san :san :as options} reg]
   (let [path (str config-dir domain "/")
-        domain-keypair (a/restore path "domain-keypair.pem")
-        csrb (t/prepare domain-keypair domain organisation (when san san))
-        cert (t/request csrb reg)]
-    (t/persist-certificate-request csrb path)
-    (spit (str path "certificate.uri") (.getLocation cert))
-    (try (t/persist path domain cert)
-         (catch AcmeUnauthorizedException e
-           (log/error (.getMessage e))))
-    (log/info "Well done! You will find your certificate chain in" path)))
+        frozen-certificate (io/file (str path "certificate.uri"))]
+    (if (.exists frozen-certificate)
+      (let [certificate-uri (new URI (slurp frozen-certificate))
+            session (session options)]
+        (t/restore session certificate-uri))
+      (let [domain-keypair (a/restore path "domain.key")
+            csrb (t/prepare domain-keypair domain organisation (when san san))
+            cert (t/request csrb reg)]
+        (t/persist-certificate-request path csrb)
+        (spit (str path "certificate.uri") (.getLocation cert))
+        cert))))
 
-(defn redownload [{domain :domain config-dir :config-dir :as options}]
+(defn request [{config-dir :config-dir domain :domain :as options} reg]
   (let [path (str config-dir domain "/")
-        session (session options)
-        certificate-uri (new URI (slurp (str path "certificate.uri")))
-        cert (t/restore session certificate-uri)]
-    (try (t/persist path domain cert)
+        cert (get-certificate options reg)]
+    (try (t/persist path cert)
          (catch AcmeUnauthorizedException e
            (log/error (.getMessage e))))
     (log/info "Well done! You will find your certificate chain in" path)))
@@ -81,7 +81,7 @@
         csrb (t/load-certificate-request path)
         cert (t/request csrb reg)]
     (spit (str path "certificate.uri") (.getLocation cert))
-    (try (t/persist path domain cert)
+    (try (t/persist path cert)
          (catch AcmeUnauthorizedException e
            (log/error (.getMessage e))))
     (log/info "Well done! You will find your certificate chain in" path)))
@@ -89,7 +89,7 @@
 (defn info [{config-dir :config-dir domain :domain}]
   (let [path (str config-dir domain "/")]
     (try
-      (t/check-expiry path domain)
+      (t/check-expiry path)
       (catch java.io.FileNotFoundException e (.getMessage e)))))
 
 (def explain l/explain)

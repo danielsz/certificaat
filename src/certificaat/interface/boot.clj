@@ -18,7 +18,7 @@
    t key-type KEY-TYPE kw "The key type, one of RSA or Elliptic Curve."
    s key-size KEY-SIZE int "Key length used to create a RSA private key."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
-                  :keypair-filename "account-keypair.pem"
+                  :keypair-filename "account.key"
                   :key-type :rsa
                   :key-size 2048}
         options (try
@@ -44,7 +44,7 @@
    c challenges CHALLENGES #{str} "The challenges you can complete"
    s san SAN #{str} "Subject Alternative Name (SAN). Additional domains to be authorized."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
-                  :keypair-filename "account-keypair.pem"
+                  :keypair-filename "account.key"
                   :acme-uri "acme://letsencrypt.org/staging"
                   :challenges #{"http-01"}}
         options (try
@@ -75,7 +75,7 @@
    m domain DOMAIN str "The domain you wish to authorize"
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
-                  :keypair-filename "account-keypair.pem"
+                  :keypair-filename "account.key"
                   :acme-uri "acme://letsencrypt.org/staging"}
         options (try
                 (d/validate ::d/certificaat-challenge (merge defaults *opts*))
@@ -104,7 +104,7 @@
    o organisation ORGANISATION str "The organisation you with to register with the cerfiticate"
    s san SAN #{str} "Subject Alternative Name (SAN). Additional domains to be authorized."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
-                  :keypair-filename "account-keypair.pem"
+                  :keypair-filename "account.key"
                   :acme-uri "acme://letsencrypt.org/staging"}
         options (try
                 (d/validate ::d/certificaat-request (merge defaults *opts*))
@@ -127,7 +127,7 @@
    m domain DOMAIN str "The domain you wish to authorize"
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."]
   (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
-                  :keypair-filename "account-keypair.pem"
+                  :keypair-filename "account.key"
                   :acme-uri "acme://letsencrypt.org/staging"}
         options (try
                 (d/validate ::d/certificaat-renew (merge defaults *opts*))

@@ -17,12 +17,12 @@
       (.setOrganization organization)
       (.sign keypair))))
 
-(defn persist-certificate-request [csrb path]
-  (let [fw (FileWriter. (str path "/CertificateSigningRequest.csr"))]
+(defn persist-certificate-request [path csrb]
+  (let [fw (FileWriter. (str path "request.csr"))]
     (.write csrb fw)))
 
 (defn load-certificate-request [path]
-  (let [input (io/input-stream (str path "/CertificateSigningRequest.csr"))]
+  (let [input (io/input-stream (str path "request.csr"))]
     (CertificateUtils/readCSR input)))
 
 (defn request [csrb reg]
@@ -31,9 +31,9 @@
 (defn download [cert]
   [(.download cert) (.downloadChain cert)])
 
-(defn persist [path domain cert]
+(defn persist [path cert]
   (let [[cert chain] (download cert)
-        fw (FileWriter. (str path domain ".cert-chain.crt"))]
+        fw (FileWriter. (str path "domain-chain.crt"))]
     (CertificateUtils/writeX509CertificateChain fw cert chain)))
 
 (defn delete [cert]
@@ -45,6 +45,6 @@
 (defn revoke [cert]
   (.revoke cert))
 
-(defn check-expiry [path domain]
-  (let [cert (io/input-stream (str path domain ".cert-chain.crt"))]
+(defn check-expiry [path]
+  (let [cert (io/input-stream (str path "domain-chain.crt"))]
     (.getNotAfter (CertificateUtils/readX509Certificate cert))))

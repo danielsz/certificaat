@@ -17,7 +17,7 @@
     :default (str (System/getProperty "user.home") "/.config/certificaat/")
     :validate [#(s/valid? ::domain/config-dir %) "Must be a string"]]
    ["-k" "--keypair-filename KEYPAIR-FILENAME" "The name of the keypair file used to register the ACME account."
-    :default "account-keypair.pem"
+    :default "account.key"
     :validate [#(s/valid? ::domain/keypair-filename %) "Must be a string"]]
    ["-t" "--key-type KEY-TYPE" "The key type, one of RSA or Elliptic Curve."
     :default :rsa
@@ -45,10 +45,14 @@
     :validate [#(s/valid? ::domain/contact %) "Must be a valid mailto URI."]]
    ["-o" "--organisation ORGANISATION" "The organisation you with to register with the cerfiticate"
     :validate [#(s/valid? ::domain/organisation %) "Must be a string."]]
+   ["-v" nil "Verbosity level"
+    :id :verbosity
+    :default 0
+    :assoc-fn (fn [m k _] (update-in m [k] inc))]
    ["-h" "--help"]])
 
 (defn usage [options-summary]
-  (->> ["Certificaat. ACME client. Written in Clojure. Licensed under the BroaderPerspective License."
+  (->> ["Certificaat. General-purpose ACME client. Compatible with LetsEncrypt CA."
         ""
         "Usage: program-name [options] action"
         ""
@@ -61,8 +65,10 @@
         "  renew   Renew the certificate for an authorized domain."
         "  info    Show the expiry date of the certificate"
         ""
-        "Please refer to the README on github for more information."
-        "https://github.com/danielsz/certificaat"]
+        "Please refer to the README on github for more information. https://github.com/danielsz/certificaat"
+        ""
+        "Licensed under the ReadALicense License."
+        ""]
        (str/join \newline)))
 
 
@@ -78,8 +84,9 @@
   (try
     (domain/validate ::domain/certificaat-info options)
     (catch ExceptionInfo e
-      (puget/cprint (s/describe ::domain/certificaat-info))
-      (puget/cprint (ex-data e))
+      (when (not (zero? (:verbosity options)))
+        (puget/cprint (s/describe ::domain/certificaat-info))
+        (puget/cprint (ex-data e)))
       (exit 1 (.getMessage e)))))
 
 (defn validate-args
