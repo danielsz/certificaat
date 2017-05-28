@@ -6,7 +6,7 @@
 (defn validate [spec val]
   (let [v (s/conform spec val)]
     (if (= v ::s/invalid)
-      (throw (ex-info "Invalid input" (s/explain-data spec val)))
+      (throw (ex-info "Invalid options" (s/explain-data spec val)))
       v)))
 
 (s/def ::config-dir string?)
@@ -27,3 +27,4 @@
 (s/def ::certificaat-request (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::domain ::organisation ::contact]
                                      :opt-un [::san]))
 (s/def ::certificaat-info (s/keys :req-un [::config-dir ::domain]))
+(s/def ::certificaat-renew (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri]))

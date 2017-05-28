@@ -5,15 +5,17 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [clojure.set :as set]
-            [clojure.core.async :refer [<!!]])
-  (:import [org.shredzone.acme4j Status]))
+            [clojure.core.async :refer [<!!]]
+            [clojure.tools.logging :as log])
+  (:import [org.shredzone.acme4j Status]
+           [org.shredzone.acme4j.exception AcmeServerException]))
 
 (def cli-options
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."
     :default (str (System/getProperty "user.home") "/.config/certificaat/")
     :validate [#(s/valid? ::domain/config-dir %) "Must be a string"]]
    ["-k" "--keypair-filename KEYPAIR-FILENAME" "The name of the keypair file used to register the ACME account."
-    :default "acme-account-keypair.pem"
+    :default "account-keypair.pem"
     :validate [#(s/valid? ::domain/keypair-filename %) "Must be a string"]]
    ["-t" "--key-type KEY-TYPE" "The key type, one of RSA or Elliptic Curve."
     :default :rsa
@@ -82,29 +84,30 @@
       :else {:exit-message (usage summary)})))
 
 (defn certificaat [args]
-  (let [{:keys [action options exit-message ok?]} (validate-args args)
-        options (update-in options [:config-dir] #(str % (:domain options) "/"))]
+  (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
         "authorize" (let [{config-dir :config-dir domain :domain} options
                           _ (k/setup options)
                           reg (k/register options)]
-                      (doseq [[domain challenges] (k/authorize options reg)
+                      (doseq [[name challenges] (k/authorize options reg)
                               i (range (count challenges))
                               challenge challenges
-                              :let [explanation (k/explain challenge domain)]]
+                              :let [explanation (k/explain challenge name)]]
                         (println explanation)
-                        (spit (str config-dir domain "." (.getType challenge) ".challenge.txt") explanation)
-                        (spit (str config-dir "challenge." domain "." i ".uri") (.getLocation challenge)))) 
+                        (spit (str config-dir domain "/" name "." (.getType challenge) ".challenge.txt") explanation)
+                        (spit (str config-dir domain "/challenge." name "." i ".uri") (.getLocation challenge)))) 
         "request"  (let [reg (k/register options)]
-                     (doseq [c (k/challenge options)]
-                       (if (= Status/VALID (<!! c))
-                         (println "Well done, you've succcessfully associated your domain with your account. You can now retrieve your certificate.")
-                         (println "Sorry, something went wrong.")))
+                     (try
+                       (doseq [c (k/challenge options)
+                               :let [resp (<!! c)]]
+                         (if (= Status/VALID resp)
+                           (println "Well done, challenge completed.")
+                           (println "Sorry, challenge failed." resp)))
+                       (catch AcmeServerException e (exit 1 (.getMessage e))))
                      (k/request options reg))
-        "renew" (let [reg (k/register options)]
-                  (k/request options reg)) 
+        "renew" (k/renew options)  
         "info" (println (k/info options))))))
 
 ;; server start/stop
