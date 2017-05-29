@@ -133,4 +133,3 @@
         "info" (let [options (validate ::domain/certificaat-info options)]
                   (puget/cprint (k/info options)))))))
 
-;; server start/stop

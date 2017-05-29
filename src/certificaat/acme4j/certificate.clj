@@ -45,6 +45,12 @@
 (defn revoke [cert]
   (.revoke cert))
 
-(defn check-expiry [path]
-  (let [cert (io/input-stream (str path "domain-chain.crt"))]
-    (.getNotAfter (CertificateUtils/readX509Certificate cert))))
+(defn info [path]
+  (let [cert-file (io/input-stream (str path "domain-chain.crt"))
+        cert (CertificateUtils/readX509Certificate cert-file)
+        issuer (.getIssuerX500Principal cert)
+        subject (.getSubjectX500Principal cert)]
+    {:issuer (.getName issuer)
+     :subject (.getName subject)
+     :san (map str (seq (.getSubjectAlternativeNames cert)))
+     :valid-until (.getNotAfter cert)}))

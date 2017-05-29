@@ -89,7 +89,7 @@
 (defn info [{config-dir :config-dir domain :domain}]
   (let [path (str config-dir domain "/")]
     (try
-      (certificate/check-expiry path)
+      (certificate/info path)
       (catch java.io.FileNotFoundException e (.getMessage e)))))
 
 (def explain challenge/explain)
