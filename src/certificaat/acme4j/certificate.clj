@@ -55,5 +55,7 @@
      :san (map str (seq (.getSubjectAlternativeNames cert)))
      :valid-until (.getNotAfter cert)}))
 
-(defn match? [cert key]
+(defn match?
+  "Utility function to determine if a private key matches a certificate"
+  [cert key]
   (= (.getModulus (.getPublicKey cert)) (.getModulus (.getPrivate key))))
