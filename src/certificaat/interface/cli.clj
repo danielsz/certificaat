@@ -131,5 +131,7 @@
         "renew" (let [options (validate ::domain/certificaat-renew options)]
                   (k/renew options))
         "info" (let [options (validate ::domain/certificaat-info options)]
-                  (puget/cprint (k/info options)))))))
+                  (puget/cprint (try
+                                  (k/info options)
+                                  (catch java.io.FileNotFoundException e (.getMessage e)))))))))
 
