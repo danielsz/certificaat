@@ -54,3 +54,6 @@
      :subject (.getName subject)
      :san (map str (seq (.getSubjectAlternativeNames cert)))
      :valid-until (.getNotAfter cert)}))
+
+(defn match? [cert key]
+  (= (.getModulus (.getPublicKey cert)) (.getModulus (.getPrivate key))))
