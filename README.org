@@ -26,8 +26,9 @@ By default, Certificaat will use the staging server that creates dummy
 certificates. This is so you can practice until you are ready to issue
 a production certificate.
 
-| Staging                                            | Production             |
-| https://acme-staging.api.letsencrypt.org/directory | acme://letsencrypt.org |
+| Staging                        | Production             |
+| acme://letsencrypt.org/staging | acme://letsencrypt.org |
+
 
 To get a certificate for a domain, you need to run ~certificaat~ twice with different options:
 
