@@ -25,31 +25,38 @@
   "Run a restartable system in the Repl"
   []
   (comp
-   (environ :env {:certificaat-config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
-                  :certificaat-keypair-filename "keypair.pem"
-                  :certificaat-domain-keypair-filename "teamsocial.pem"
-                  :certificaat-acme-server-uri "https://acme-staging.api.letsencrypt.org/directory"
-                  :certificaat-acme-uri "acme://letsencrypt.org/staging"
-                  :certificaat-acme-contact "mailto:daniel.szmulewicz@gmail.com"
-                  :certificaat-domain "teamsocial.me"
-                  :certificaat-organization "sapiens sapiens"
-                  :certificaat-challenge-type "dns-01"})
    (watch :verbose true)
    (notify :visual true)
    (repl :server true)))
 
-(def +project+ "certificaat")
-(def +version+ "1.0.0")
+(task-options!
+ push {:repo-map {:url "https://clojars.org/repo/"}}
+ pom {:project 'org.danielsz/certificaat
+      :version "1.0.0"
+      :scm {:name "git"
+            :url "https://github.com/danielsz/certificaat"}}
+ aot {:namespace '#{certificaat.core}}
+ bin {:output-dir "bin"}
+ jar {:main 'certificaat.core :file "certificaat-1.0.0.jar"})
 
 (deftask build
+  []
+  (comp (pom) (jar) (install)))
+
+(deftask build-uberjar
   "Builds an uberjar of this project that can be run with java -jar"
   []
   (comp
-   (aot :namespace '#{certificaat.core})
-   (pom :project (symbol +project+)
-        :version +version+)
+   (aot)
+   (pom)
    (uber)
-   (jar :main 'certificaat.core :file (str +project+ "-" +version+ ".jar"))
-   (bin :output-dir "bin")))
+   (jar)))
 
+(deftask build-binary
+  []
+  (comp (build-uberjar) (bin)))
 
+(deftask push-release
+  []
+  (comp
+   (pom) (jar) (push)))

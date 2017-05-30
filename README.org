@@ -82,8 +82,11 @@ Certificaat will honor all challenges defined in the ACME specification, but ple
 
 ** Data folder
 Certificaat follows the [[https://specifications.freedesktop.org/basedir-spec/latest/][XDG Base Directory Specification]]. The configuration folder is determined by querying the value of ~XDG_CONFIG_HOME~ in the environment, and if not set, will default to ~~/.config/certificaat~.
-** Boot
-In addition to the command line, Certificaat comes with Boot tasks which you can integrate in your builds. The same functionality is offered via this interface. In your ~build.boot~ file, define the following tasks and use them the way you see fit.
+** Clojure library
+In addition to the command line, Certificaat is available on Clojars as a regular Clojure library which you can require in your projects.
+[[http://clojars.org/org.danielsz/certificaat/latest-version.svg]]
+*** Boot
+Certificaat comes with Boot tasks which you can integrate in your builds. This interface offers the same functionality as the binary. In your ~build.boot~ file, define the following tasks and use them the way you see fit.
 
 #+BEGIN_SRC clojure
 (deftask authorize []
