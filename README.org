@@ -10,14 +10,24 @@ Certificaat will honor all challenges defined in the ACME specification, but ple
 | HTTP                                  | http-01                 | ✓             | ✓           |
 | DNS                                   | dns-01                  | ✓             | ✓           |
 | TLS with Server Name Indication (SNI) | tls-sni-01 & tls-sni-02 | ✓ & ✕         | ✓           |
-| Out-Of-Band                           | oob-01                  | ✕             | ✓           |
+| Out-of-Band                           | oob-01                  | ✕             | ✓           |
 
 
 ** Usage
 *** Command line
 
-Certificaat releases come as a self-contained binary requiring Java. Drop it in your ~PATH~ and run it on the command line.
-Type ~certificaat -h~ to familiarize yourself with the input it expects. 
+Certificaat releases come as a self-contained binary requiring
+Java. Drop it in your ~PATH~ and run it on the command line.  
+
+Type ~certificaat -h~ to familiarize yourself with the input it
+expects.
+
+By default, Certificaat will use the staging server that creates dummy
+certificates. This is so you can practice until you are ready to issue
+a production certificate.
+
+| Staging                                            | Production             |
+| https://acme-staging.api.letsencrypt.org/directory | acme://letsencrypt.org |
 
 To get a certificate for a domain, you need to run ~certificaat~ twice with different options:
 
@@ -39,7 +49,8 @@ you want to authorize.
 - The “-m” option indicates the domain you want to authorize. It will feature in the Subject name of the final X.509 certificate.
 - The “-a” option is the email address used by the CA to send expiry reminders.
 - The “-n” option is an additional domain name you want to authorize. It will feature in the Subject Alternative Name (SAN) of the certificate. Repeat this option for all required names. Caution: there is a hard limit imposed by the CA. 
-- The “-c” option is the challenge you want to complete.
+- The “-c” option is the challenge you want to complete. Repeat this option if you want to offer the CA multiple challenges. 
+- The “-u” option is the URI to the ACME CA. 
 
 Before exiting, ~certificaat~ will display instructions pertaining to the challenge. This is the time to satisfy the requirements (for example, configuring DNS records or preparing your web server). You are now ready for the second phase. 
 
