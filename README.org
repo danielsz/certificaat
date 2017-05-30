@@ -46,11 +46,11 @@ During this phase, certificaat will, if needed, register a user
 account with the ACME CA, and gather the information about the domain
 you want to authorize.
 
-- The “-m” option indicates the domain you want to authorize. It will feature in the Subject name of the final X.509 certificate.
-- The “-a” option is the email address used by the CA to send expiry reminders.
-- The “-n” option is an additional domain name you want to authorize. It will feature in the Subject Alternative Name (SAN) of the certificate. Repeat this option for all required names. Caution: there is a hard limit imposed by the CA. 
-- The “-c” option is the challenge you want to complete. Repeat this option if you want to offer the CA multiple challenges. 
-- The “-u” option is the URI to the ACME CA. 
+- “-m” option indicates the domain you want to authorize. It will feature in the Subject name of the final X.509 certificate.
+- “-a” option is the email address used by the CA to send expiry reminders.
+- “-n” option is an additional domain name you want to authorize. It will feature in the Subject Alternative Name (SAN) of the certificate. Repeat this option for all required names. Caution: there is a hard limit imposed by the CA. 
+- “-c” option is the challenge you want to complete. Repeat this option if you want to offer the CA multiple challenges. 
+- “-u” option is the URI to the ACME CA. 
 
 Before exiting, ~certificaat~ will display instructions pertaining to the challenge. This is the time to satisfy the requirements (for example, configuring DNS records or preparing your web server). You are now ready for the second phase. 
 
