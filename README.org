@@ -1,12 +1,12 @@
 * Certificaat
 ** Definition
 Certificaat is a general-purpose [[https://tools.ietf.org/html/draft-ietf-acme-acme-06][ACME]] client, fully compatible with the [[https://letsencrypt.org/][Let’s Encrypt]] CA.
+** Installation
+[[https://github.com/danielsz/certificaat/releases/latest][Download]] the latest release, extract the archive and drop the self-contained binary in your ~PATH~.
 
+Java needs to be installed on your system.
 ** Usage
 *** Command line
-
-Certificaat releases come as a self-contained binary requiring
-Java. Drop it in your ~PATH~ and run it on the command line.  
 
 Type ~certificaat -h~ to familiarize yourself with the input it
 expects.
