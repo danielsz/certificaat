@@ -1,16 +1,15 @@
 (ns certificaat.interface.cli
-  (:require [certificaat.kung-fu :as k]
-            [clojure.tools.cli :refer [parse-opts]]
-            [certificaat.domain :as domain]
+  (:require [certificaat.domain :as domain]
+            [certificaat.kung-fu :as k]
+            [clojure.core.async :refer [<!!]]
+            [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [clojure.set :as set]
-            [puget.printer :as puget]
-            [clojure.core.async :refer [<!!]]
-            [clojure.tools.logging :as log])
-  (:import [org.shredzone.acme4j Status]
-           [org.shredzone.acme4j.exception AcmeServerException]
-           [clojure.lang ExceptionInfo]))
+            [clojure.tools.cli :refer [parse-opts]]
+            [puget.printer :as puget])
+  (:import clojure.lang.ExceptionInfo
+           org.shredzone.acme4j.exception.AcmeServerException
+           org.shredzone.acme4j.Status))
 
 (def cli-options
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."

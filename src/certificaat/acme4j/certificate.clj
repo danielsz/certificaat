@@ -5,6 +5,7 @@
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j Certificate]
            [org.shredzone.acme4j.util CSRBuilder CertificateUtils]
+           [org.shredzone.acme4j.util KeyPairUtils]
            [java.io FileWriter FileReader]))
 
 (defn prepare [keypair domain organization & [additional-domains]]
@@ -45,17 +46,27 @@
 (defn revoke [cert]
   (.revoke cert))
 
-(defn info [path]
-  (let [cert-file (io/input-stream (str path "domain-chain.crt"))
-        cert (CertificateUtils/readX509Certificate cert-file)
-        issuer (.getIssuerX500Principal cert)
-        subject (.getSubjectX500Principal cert)]
-    {:issuer (.getName issuer)
-     :subject (.getName subject)
-     :san (map str (seq (.getSubjectAlternativeNames cert)))
-     :valid-until (.getNotAfter cert)}))
-
 (defn match?
   "Utility function to determine if a private key matches a certificate"
   [cert key]
   (= (.getModulus (.getPublicKey cert)) (.getModulus (.getPrivate key))))
+
+(defn info [path]
+  (let [cert-file (str path "domain-chain.crt")
+        key-file (str path "domain.key")
+        cert (CertificateUtils/readX509Certificate (io/input-stream cert-file))
+        issuer (.getIssuerX500Principal cert)
+        subject (.getSubjectX500Principal cert)
+        info {:issuer (.getName issuer)
+              :subject (.getName subject)
+              :san (map str (seq (.getSubjectAlternativeNames cert)))
+              :valid-until (.getNotAfter cert)
+              :path cert-file}]
+    (if (.exists (io/file key-file))
+      (let [key (KeyPairUtils/readKeyPair (FileReader. key-file))]
+        (if (match? cert key)
+          (assoc info :private-key key-file)
+          info))
+      info)))
+
+
