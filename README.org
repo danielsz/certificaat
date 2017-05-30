@@ -83,6 +83,27 @@ Certificaat will honor all challenges defined in the ACME specification, but ple
 ** Data folder
 Certificaat follows the [[https://specifications.freedesktop.org/basedir-spec/latest/][XDG Base Directory Specification]]. The configuration folder is determined by querying the value of ~XDG_CONFIG_HOME~ in the environment, and if not set, will default to ~~/.config/certificaat~.
 ** Boot
+In addition to the command line, Certificaat comes with Boot tasks which you can integrate in your builds. The same functionality is offered via this interface. In your ~build.boot~ file, define the following tasks and use them the way you see fit.
+
+#+BEGIN_SRC clojure
+(deftask authorize []
+  (comp
+   (certificaat-setup :domain "example.com")
+   (certificaat-authorize :domain "example.com" :challenges #{"dns-01"} :san #{"www.example.com"} :contact "mailto:joe@example.com")))
+
+(deftask request []
+  (comp
+   (certificaat-challenge :domain "example.com")
+   (certificaat-request :domain "example.com" :organisation "Example corp." :san #{"www.example.com"})
+   (certificaat-info :domain "example.com")))
+
+(deftask renew []
+  (comp (certificaat-renew :domain "example.com")
+        (certificaat-info :domain "example.com")))
+
+#+END_SRC
+** Contributions
+If you plan to submit enhancements beyond bug fixes, please coordinate with me beforehand in order to save everybody’s time and effort.
 ** Credits
 I wish to thank [[https://shredzone.org/maven/acme4j/][Richard Körber]] who wrote the Java client for the ACME protocol, [[https://github.com/shred/acme4j][acme4j]], which serves as the foundation for Certificaat. Not only is it well written, it is exquisitely [[https://shredzone.org/maven/acme4j/][documented]]. 
 ** License

@@ -160,18 +160,5 @@
         (util/info "%s\n" (k/info options)))
       fileset)))
 
-(deftask authorize []
-  (comp
-   (certificaat-setup :domain "teamsocial.me")
-   (certificaat-authorize :domain "teamsocial.me" :challenges #{"dns-01"} :san #{"www.teamsocial.me"} :contact "mailto:daniel.szmulewicz@gmail.com")))
 
-(deftask request []
-  (comp
-   (certificaat-challenge :domain "teamsocial.me")
-   (certificaat-request :domain "teamsocial.me" :organisation "Sapiens Sapiens" :san #{"www.teamsocial.me"} :contact "mailto:daniel.szmulewicz@gmail.com")
-   (certificaat-info :domain "teamsocial.me")))
-
-(deftask renew []
-  (comp (certificaat-renew :domain "teamsocial.me")
-        (certificaat-info :domain "teamsocial.me")))
 
