@@ -16,7 +16,6 @@
   (let [keypair (account/keypair key-type key-size)
         domain-keypair (account/keypair key-type key-size)
         domain-path (str config-dir domain "/")]
-    (io/make-parents (str domain-path "domain.key"))
     (configuration/add-keypair config-dir keypair-filename keypair)
     (configuration/add-keypair domain-path "domain.key" domain-keypair)))
 

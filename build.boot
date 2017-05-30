@@ -1,6 +1,6 @@
 (set-env!
  :source-paths   #{"src"}
- :resource-paths #{"resources"}
+ :resource-paths #{"src" "resources"}
  :dependencies '[[adzerk/boot-jar2bin "1.1.0" :scope "test"]
                  [org.clojure/clojure "1.9.0-alpha17"]
                  [org.clojure/core.async "0.3.442"]
@@ -32,14 +32,14 @@
 (task-options!
  push {:repo-map {:url "https://clojars.org/repo/"}}
  pom {:project 'org.danielsz/certificaat
-      :version "1.0.0"
+      :version "1.0.1"
       :scm {:name "git"
             :url "https://github.com/danielsz/certificaat"}}
  aot {:namespace '#{certificaat.core}}
  bin {:output-dir "bin"}
- jar {:main 'certificaat.core :file "certificaat-1.0.0.jar"})
+ jar {:main 'certificaat.core :file "certificaat-1.0.1.jar"})
 
-(deftask build
+(deftask build-local
   []
   (comp (pom) (jar) (install)))
 

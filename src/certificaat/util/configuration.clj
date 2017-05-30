@@ -7,14 +7,10 @@
 
 (def config-dir #(or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/certificaat/")))
 
-(defn create-dir [dir]
-  (let [dir (io/file dir)]
-    (when (not (.isDirectory dir))
-      (.mkdir dir))))
-
 (defn add-keypair [config-dir keypair-filename keypair]
   (let [keypair-file (io/file (str config-dir keypair-filename))]
     (when (not (.exists keypair-file))
+      (io/make-parents keypair-file)
       (account/persist keypair (str config-dir keypair-filename)))))
 
 (defn save-agreement [config-dir reg]
@@ -23,4 +19,3 @@
         filename (last (str/split (.getPath url) #"/"))]
     (with-open [w (io/output-stream (str config-dir filename))]
       (.write w agreement))))
-
