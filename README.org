@@ -4,7 +4,8 @@ Certificaat is a general-purpose [[https://tools.ietf.org/html/draft-ietf-acme-a
 ** Installation
 [[https://github.com/danielsz/certificaat/releases/latest][Download]] the latest release, extract the archive and drop the self-contained binary in your ~PATH~.
 
-Java needs to be installed on your system.
+/Note:/ Java is a system requirement.
+
 ** Usage
 *** Command line
 
