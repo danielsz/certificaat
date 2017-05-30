@@ -81,12 +81,15 @@ Certificaat will honor all challenges defined in the ACME specification, but ple
 | Out-of-Band                           | oob-01                  | ✕             | ✓           |
 
 ** Data folder
-Certificaat follows the [[https://specifications.freedesktop.org/basedir-spec/latest/][XDG Base Directory Specification]]. The configuration folder is determined by querying the value of ~XDG_CONFIG_HOME~ in the environment, and if not set, will default to ~~/.config/certificaat~.
+Certificaat follows the [[https://specifications.freedesktop.org/basedir-spec/latest/][XDG Base Directory Specification]]. The configuration folder is determined by querying the value of ~XDG_CONFIG_HOME~ in the environment, and if not set, will default to ~$HOME/.config/certificaat~.
 ** Clojure library
-In addition to the command line, Certificaat is available on Clojars as a regular Clojure library which you can require in your projects.
+In addition to the command line, Certificaat is available on [[https://clojars.org/][Clojars]] as a regular Clojure library which you can require in your projects.
+
 [[http://clojars.org/org.danielsz/certificaat/latest-version.svg]]
 *** Boot
-Certificaat comes with Boot tasks which you can integrate in your builds. This interface offers the same functionality as the binary. In your ~build.boot~ file, define the following tasks and use them the way you see fit.
+Certificaat comes with [[http://boot-clj.com/][Boot]] tasks which you can integrate in your builds. This interface offers the same functionality as the binary, which you will find in the ~certificaat.interface.boot~ namespace. 
+
+In a ~build.boot~ file, define the following tasks and use them the way you see fit.
 
 #+BEGIN_SRC clojure
 (deftask authorize []
@@ -97,8 +100,7 @@ Certificaat comes with Boot tasks which you can integrate in your builds. This i
 (deftask request []
   (comp
    (certificaat-challenge :domain "example.com")
-   (certificaat-request :domain "example.com" :organisation "Example corp." :san #{"www.example.com"})
-   (certificaat-info :domain "example.com")))
+   (certificaat-request :domain "example.com" :organisation "Example corp." :san #{"www.example.com"})))
 
 (deftask renew []
   (comp (certificaat-renew :domain "example.com")
