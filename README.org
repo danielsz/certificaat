@@ -22,11 +22,11 @@ Java. Drop it in your ~PATH~ and run it on the command line.
 Type ~certificaat -h~ to familiarize yourself with the input it
 expects.
 
-By default, Certificaat will use Let’s Encrypt’s staging server. The
-resulting certificates will be fake. This is so you can practice until
-you are ready to issue a production certificate.
+By default, Certificaat will talk to Let’s Encrypt’s staging
+server. The resulting certificates will be fake. This is so you can
+practice until you are ready to issue a production certificate.
 
-| Staging                        | Production             |
+| Staging URI                    | Production URI         |
 | acme://letsencrypt.org/staging | acme://letsencrypt.org |
 
 To get a certificate for a domain, you need to run ~certificaat~ twice with different options:
