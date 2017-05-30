@@ -5,6 +5,8 @@
             [environ.core :refer [env]]
             [clojure.string :as str]))
 
+(def config-dir #(or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/certificaat/")))
+
 (defn create-dir [dir]
   (let [dir (io/file dir)]
     (when (not (.isDirectory dir))

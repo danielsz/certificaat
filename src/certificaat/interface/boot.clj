@@ -1,6 +1,7 @@
 (ns certificaat.interface.boot
   (:require [certificaat.kung-fu :as k]
             [certificaat.domain :as d]
+            [certificaat.util.configuration :as c]
             [boot.core :as boot :refer [deftask with-pre-wrap]]
             [boot.util :as util]
             [clojure.java.io :as io]
@@ -43,7 +44,7 @@
    a contact CONTACT str "The email address used to send you expiry notices (mailto:me@example.com)"
    c challenges CHALLENGES #{str} "The challenges you can complete"
    s san SAN #{str} "Subject Alternative Name (SAN). Additional domains to be authorized."]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+  (let [defaults {:config-dir (c/config-dir)
                   :keypair-filename "account.key"
                   :acme-uri "acme://letsencrypt.org/staging"
                   :challenges #{"http-01"}}
@@ -74,7 +75,7 @@
    k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
    m domain DOMAIN str "The domain you wish to authorize"
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+  (let [defaults {:config-dir (c/config-dir)
                   :keypair-filename "account.key"
                   :acme-uri "acme://letsencrypt.org/staging"}
         options (try
@@ -103,7 +104,7 @@
    a contact CONTACT str "The email address used to send you expiry notices (mailto:me@example.com)"
    o organisation ORGANISATION str "The organisation you with to register with the cerfiticate"
    s san SAN #{str} "Subject Alternative Name (SAN). Additional domains to be authorized."]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+  (let [defaults {:config-dir (c/config-dir)
                   :keypair-filename "account.key"
                   :acme-uri "acme://letsencrypt.org/staging"}
         options (try
@@ -126,7 +127,7 @@
    k keypair-filename KEYPAIR-FILENAME str "The name of the keypair file for your account."
    m domain DOMAIN str "The domain you wish to authorize"
    u acme-uri ACME-URI str "The URI of the ACME server’s directory service as documented by the CA."]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")
+  (let [defaults {:config-dir (c/config-dir)
                   :keypair-filename "account.key"
                   :acme-uri "acme://letsencrypt.org/staging"}
         options (try
@@ -145,7 +146,7 @@
 (deftask certificaat-info
   [d config-dir CONFIG-DIR str "The configuration directory for certificaat. Follows XDG folders convention."
    m domain DOMAIN str "The domain you wish to authorize"]
-  (let [defaults {:config-dir (str (System/getProperty "user.home") "/.config/certificaat/")}
+  (let [defaults {:config-dir (c/config-dir)}
         options (try
                 (d/validate ::d/certificaat-info (merge defaults *opts*))
                 (catch Exception e e))]

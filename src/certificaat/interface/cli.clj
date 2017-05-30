@@ -1,6 +1,7 @@
 (ns certificaat.interface.cli
   (:require [certificaat.domain :as domain]
             [certificaat.kung-fu :as k]
+            [certificaat.util.configuration :as c]
             [clojure.core.async :refer [<!!]]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
@@ -13,7 +14,7 @@
 
 (def cli-options
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."
-    :default (str (System/getProperty "user.home") "/.config/certificaat/")
+    :default (c/config-dir)
     :validate [#(s/valid? ::domain/config-dir %) "Must be a string"]]
    ["-k" "--keypair-filename KEYPAIR-FILENAME" "The name of the keypair file used to register the ACME account."
     :default "account.key"
@@ -53,7 +54,7 @@
 (defn usage [options-summary]
   (->> ["Certificaat. General-purpose ACME client. Compatible with LetsEncrypt CA."
         ""
-        "Usage: program-name [options] action"
+        "Usage: certificaat [options] action"
         ""
         "Options:"
         options-summary
@@ -61,12 +62,11 @@
         "Actions:"
         "  authorize   Authorize a domain with the ACME server. Will explain the challenge to accept."
         "  request     Will attempt to complete all challenges and request the certificate if successful."
-        "  renew   Renew the certificate for an authorized domain."
-        "  info    Show the expiry date of the certificate"
+        "  renew       Renew the certificate for an authorized domain."
+        "  info        Show the expiry date of the certificate"
         ""
         "Please refer to the README on github for more information. https://github.com/danielsz/certificaat"
         ""
-        "Licensed under the ReadALicense License."
         ""]
        (str/join \newline)))
 
