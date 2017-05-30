@@ -52,7 +52,8 @@
    ["-h" "--help"]])
 
 (defn usage [options-summary]
-  (->> ["Certificaat. General-purpose ACME client. Compatible with LetsEncrypt CA."
+  (->> [""
+        "Certificaat. General-purpose ACME client. Compatible with LetsEncrypt CA."
         ""
         "Usage: certificaat [options] action"
         ""
