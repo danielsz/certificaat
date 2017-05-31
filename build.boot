@@ -56,6 +56,12 @@
   []
   (comp (build-uberjar) (bin)))
 
+(deftask build-uberjar-persist
+  []
+  (comp (build-uberjar)
+        (sift :include #{#"certificaat-1.0.1.jar"})
+        (target :dir #{"bin"})))
+
 (deftask push-release
   []
   (comp
