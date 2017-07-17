@@ -26,6 +26,8 @@ To get a certificate for a domain, you need to run ~certificaat~ twice with diff
 
 For as long as the authorizations remain valid, the certificate can be renewed in one pass with ~certificaat renew~.
 
+/Note:/ With LetsEncrypt, cached authorizations last for 30 days from the time of validation.
+
 **** Authorization
 
 #+BEGIN_SRC shell
