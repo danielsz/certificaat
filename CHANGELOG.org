@@ -1,0 +1,3 @@
+* certificaat 1.0.1
+
+- Catch AcmeUnauthorizedException when renewing

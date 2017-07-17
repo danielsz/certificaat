@@ -9,7 +9,7 @@
             [clojure.tools.cli :refer [parse-opts]]
             [puget.printer :as puget])
   (:import clojure.lang.ExceptionInfo
-           org.shredzone.acme4j.exception.AcmeServerException
+           (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException)
            org.shredzone.acme4j.Status))
 
 (def cli-options
@@ -129,7 +129,8 @@
                        (catch AcmeServerException e (exit 1 (.getMessage e))))
                      (k/request options reg))
         "renew" (let [options (validate ::domain/certificaat-renew options)]
-                  (k/renew options))
+                  (try (k/renew options)
+                       (catch AcmeUnauthorizedException e (exit 1 (.getMessage e)))))
         "info" (let [options (validate ::domain/certificaat-info options)]
                   (puget/cprint (try
                                   (k/info options)

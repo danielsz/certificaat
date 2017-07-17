@@ -29,15 +29,16 @@
    (notify :visual true)
    (repl :server true)))
 
+(def +version+ "1.0.1")
 (task-options!
  push {:repo-map {:url "https://clojars.org/repo/"}}
  pom {:project 'org.danielsz/certificaat
-      :version "1.0.1"
+      :version +version+
       :scm {:name "git"
             :url "https://github.com/danielsz/certificaat"}}
  aot {:namespace '#{certificaat.core}}
  bin {:output-dir "bin"}
- jar {:main 'certificaat.core :file "certificaat-1.0.1.jar"})
+ jar {:main 'certificaat.core :file (str "certificaat-" +version+ ".jar")})
 
 (deftask build-local
   []
@@ -59,7 +60,7 @@
 (deftask build-uberjar-persist
   []
   (comp (build-uberjar)
-        (sift :include #{#"certificaat-1.0.1.jar"})
+        (sift :include #{(re-pattern (str "certificaat-" +version+ ".jar"))})
         (target :dir #{"bin"})))
 
 (deftask push-release
