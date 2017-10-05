@@ -10,7 +10,9 @@
         frozen-challenges (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file (str config-dir domain))))]
     (doseq [frozen-challenge frozen-challenges
           :let [uri (new URI (slurp frozen-challenge))
-                challenge (challenge/restore session uri)]
+                challenge (challenge/restore session uri)
+                file (io/file (str webroot "/.well-known/acme-challenge/" (.getToken challenge)))]
           :when (= (.getType challenge) "http-01")]
-      (spit (str webroot "/.well-known/acme-challenge/" (.getToken challenge)) (.getAuthorization challenge))
+      (io/make-parents file)
+      (spit file (.getAuthorization challenge))
       (println "Challenge data written to file."))))
