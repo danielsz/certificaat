@@ -1,6 +1,7 @@
 (ns certificaat.interface.cli
   (:require [certificaat.domain :as domain]
             [certificaat.kung-fu :as k]
+            [certificaat.plugins.webroot :as w]
             [certificaat.util.configuration :as c]
             [clojure.core.async :refer [<!!]]
             [clojure.set :as set]
@@ -45,6 +46,8 @@
     :validate [#(s/valid? ::domain/contact %) "Must be a valid mailto URI."]]
    ["-o" "--organisation ORGANISATION" "The organisation you with to register with the cerfiticate"
     :validate [#(s/valid? ::domain/organisation %) "Must be a string."]]
+   ["-w" "--webroot WEBROOT" "Web server directory where the ACME challenge files reside"
+    :validate [#(s/valid? ::domain/webroot %) "Must be a valid directory in the file system"]]
    ["-v" nil "Verbosity level"
     :id :verbosity
     :default 0
@@ -98,8 +101,8 @@
     (cond
       (:help options) {:exit-message (usage summary) :ok? true}
       errors {:exit-message (error-msg errors)}
-      (and (= 1 (count arguments))
-           (#{"authorize" "request" "renew" "info"} (first arguments))) {:action (first arguments) :options options}
+      (> (count arguments) 1) {:exit-message "Too many actions provided. See --help for usage instructions."}
+      (s/valid? ::domain/command-line-actions (first arguments)) {:action (first arguments) :options options}
       :else {:exit-message (usage summary)})))
 
 (defn certificaat [args]
@@ -134,5 +137,7 @@
         "info" (let [options (validate ::domain/certificaat-info options)]
                   (puget/cprint (try
                                   (k/info options)
-                                  (catch java.io.FileNotFoundException e (.getMessage e)))))))))
+                                  (catch java.io.FileNotFoundException e (.getMessage e)))))
+        "plugin" (let [options (validate ::domain/certificaat-plugin options)]
+                   (w/webroot options))))))
 

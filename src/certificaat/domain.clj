@@ -1,5 +1,6 @@
 (ns certificaat.domain
-  (:require [clojure.spec.alpha :as s])
+  (:require [clojure.spec.alpha :as s]
+            [clojure.java.io :as io])
   (:import [java.net InetAddress]
            [java.net URI]))
 
@@ -21,6 +22,12 @@
 (s/def ::organisation string?)
 (s/def ::challenge #{"http-01" "dns-01" "tls-sni-01" "tls-sni-02" "oob-01"})
 (s/def ::challenges (s/coll-of ::challenge :kind set?))
+
+(s/def ::http-01-plugins #{"webroot" "server" "command"})
+(s/def ::webroot (s/and string? #(try (.exists (io/file %))
+                                      (catch java.io.IOException e false))))
+
+(s/def ::command-line-actions #{"authorize" "request" "renew" "info" "plugin"})
 (s/def ::certificaat-setup (s/keys :req-un [::config-dir ::keypair-filename ::domain ::key-size ::key-type]))
 (s/def ::certificaat-authorize (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::domain ::challenges ::contact]
                                        :opt-un [::san]))
@@ -29,6 +36,7 @@
                                      :opt-un [::san]))
 (s/def ::certificaat-info (s/keys :req-un [::config-dir ::domain]))
 (s/def ::certificaat-renew (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri]))
+(s/def ::certificaat-plugin (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::webroot ::domain ]))
 
 (def options (-> (make-hierarchy)
                  (derive ::config-dir ::program)
