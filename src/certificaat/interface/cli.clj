@@ -60,14 +60,14 @@
         ""
         "Usage: certificaat [options] action"
         ""
-        "Options:"
-        options-summary
-        ""
         "Actions:"
         "  authorize   Authorize a domain with the ACME server. Will explain the challenge to accept."
         "  request     Will attempt to complete all challenges and request the certificate if successful."
         "  renew       Renew the certificate for an authorized domain."
         "  info        Show the expiry date of the certificate"
+        ""
+        "Options:"
+        options-summary
         ""
         "Please refer to the README on github for more information. https://github.com/danielsz/certificaat"
         ""
