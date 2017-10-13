@@ -4,6 +4,7 @@
             [certificaat.util.download :as d]
             [certificaat.domain :as domain]
             [environ.core :refer [env]]
+            [puget.printer :as puget]
             [clojure.string :as str]))
 
 (def defaults {:config-dir (str (or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/")) "certificaat/")
@@ -31,7 +32,7 @@
 (defn write-config [file content]
   (when (not (.exists file))
       (io/make-parents file)
-      (spit file (pr-str content))))
+      (spit file (puget/pprint-str content))))
 
 (defn add-config [{:keys [config-dir domain] :as options}]
   (let [domain-path (str config-dir domain "/")
