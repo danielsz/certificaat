@@ -1,5 +1,6 @@
 (ns certificaat.domain
   (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             [clojure.java.io :as io])
   (:import [java.net InetAddress]
            [java.net URI]))
@@ -10,7 +11,9 @@
       (throw (ex-info "Invalid options" (s/explain-data spec val)))
       v)))
 
-(s/def ::config-dir string?)
+(s/def ::path (s/and string? #(try (.exists (io/file %))
+                                   (catch java.io.IOException e false))))
+(s/def ::config-dir ::path)
 (s/def ::keypair-filename string?)
 (s/def ::acme-uri (s/and string? #(.isAbsolute (URI. %))))
 (s/def ::contact (s/and string? #(.isOpaque (URI. %))))
@@ -23,30 +26,29 @@
 (s/def ::challenge #{"http-01" "dns-01" "tls-sni-01" "tls-sni-02" "oob-01"})
 (s/def ::challenges (s/coll-of ::challenge :kind set?))
 
-(s/def ::http-01-plugins #{"webroot" "server" "command"})
-(s/def ::webroot (s/and string? #(try (.exists (io/file %))
-                                      (catch java.io.IOException e false))))
+(s/def ::hook #{:before-challenge :after-request})
+(s/def ::hooks (s/* ::hook))
+(s/def ::plugins (s/keys :opt-un [::dhparams ::webroot ::email] ))
 
-(s/def ::command-line-actions #{"authorize" "request" "renew" "info" "plugin"})
-(s/def ::certificaat-setup (s/keys :req-un [::config-dir ::keypair-filename ::domain ::key-size ::key-type]))
-(s/def ::certificaat-authorize (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::domain ::challenges ::contact]
-                                       :opt-un [::san]))
-(s/def ::certificaat-challenge (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri]))
-(s/def ::certificaat-request (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::domain ::organisation ::contact]
-                                     :opt-un [::san]))
-(s/def ::certificaat-info (s/keys :req-un [::config-dir ::domain]))
-(s/def ::certificaat-renew (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri]))
-(s/def ::certificaat-plugin (s/keys :req-un [::config-dir ::keypair-filename ::acme-uri ::webroot ::domain ]))
+(s/def ::webroot (s/keys :req-un [::path]))
 
-(def options (-> (make-hierarchy)
-                 (derive ::config-dir ::program)
-                 (derive ::keypair-filename ::account)
-                 (derive ::acme-uri ::account)
-                 (derive ::contact ::account)
-                 (derive ::key-size ::account)
-                 (derive ::key-type ::account)
-                 (derive ::domain ::request)
-                 (derive ::san ::request)
-                 (derive ::organisation ::request)
-                 (derive ::challenge ::request)
-                 (derive ::challenges ::request)))
+(s/def ::cli-actions #{"init" "run" "config" "reset" "info" "cron"})
+(s/def ::cli-options (s/keys :req-un [::config-dir ::domain]))
+(s/def ::config (s/keys :req-un [::acme-uri ::domain ::challenges ::contact ::plugins ::hooks]
+                        :opt-un [::san]))
+
+
+
+(def realms (-> (make-hierarchy)
+                (derive :config-dir ::program)
+                (derive :keypair-filename ::account)
+                (derive :key-size ::account)
+                (derive :key-type ::account)
+                (derive :contact ::domain)
+                (derive :acme-uri ::domain)
+                (derive :domain ::domain)
+                (derive :san ::domain)
+                (derive :organisation ::domain)
+                (derive :challenges ::domain)
+                (derive :hooks ::domain)
+                (derive :plugins ::account)))

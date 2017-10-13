@@ -2,7 +2,9 @@
   (:import (java.security AlgorithmParameters AlgorithmParameterGenerator SecureRandom)
            javax.crypto.spec.DHParameterSpec
            java.io.FileWriter
-           (org.bouncycastle.util.io.pem PemObject PemWriter)))
+           (org.bouncycastle.util.io.pem PemObject PemWriter))
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]))
 
 (defn generate-parameter-set [prime-size]
   (let [param-gen (AlgorithmParameterGenerator/getInstance "DH")
@@ -18,3 +20,7 @@
       (.writeObject pem-object)
       (.flush)
       (.close))))
+
+(defn group14-to-path [path]
+  (let [group14 (slurp (io/resource "group14.pem"))]
+    (spit path group14)))

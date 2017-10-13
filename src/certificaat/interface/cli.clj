@@ -1,31 +1,34 @@
 (ns certificaat.interface.cli
   (:require [certificaat.domain :as domain]
             [certificaat.kung-fu :as k]
+            [certificaat.hooks :as h]
             [certificaat.plugins.webroot :as w]
             [certificaat.util.configuration :as c]
+            [certificaat.util.tentoonstelling :as t]
             [clojure.core.async :refer [<!!]]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [clojure.tools.cli :refer [parse-opts]]
-            [puget.printer :as puget])
+            [clojure.tools.cli :refer [parse-opts get-default-options]]
+            [puget.printer :as puget]
+            [clojure.java.io :as io])
   (:import clojure.lang.ExceptionInfo
            (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException)
            org.shredzone.acme4j.Status))
 
 (def cli-options
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."
-    :default (c/config-dir)
+    :default (:config-dir c/defaults)
     :validate [#(s/valid? ::domain/config-dir %) "Must be a string"]]
    ["-k" "--keypair-filename KEYPAIR-FILENAME" "The name of the keypair file used to register the ACME account."
-    :default "account.key"
+    :default (:keypair-filename c/defaults)
     :validate [#(s/valid? ::domain/keypair-filename %) "Must be a string"]]
    ["-t" "--key-type KEY-TYPE" "The key type, one of RSA or Elliptic Curve."
-    :default :rsa
+    :default (:key-type c/defaults)
     :parse-fn keyword
     :validate [#(s/valid? ::domain/key-type %) "Must be rsa or ec"]]
    ["-s" "--key-size KEY-SIZE" "Key length used to create a RSA private key."
-    :default 2048
+    :default (:key-size c/defaults)
     :parse-fn #(Integer/parseInt %)
     :validate [#(s/valid? ::domain/key-size %) "Must be 1024, 2048 or 4096"]]
    ["-m" "--domain DOMAIN" "The domain you wish to authorize"
@@ -39,7 +42,6 @@
     :assoc-fn (fn [m k v] (update-in m [k] #(into #{} (set/union % v))))
     :validate [#(s/valid? ::domain/challenges %) "Must be one of dns-01 or http-01"]]
    ["-u" "--acme-uri ACME-URI" "The URI of the ACME server’s directory service as documented by the CA."
-    :default "acme://letsencrypt.org/staging"
     :validate [#(s/valid? ::domain/acme-uri %) "Must be a valid URI."]]
    ["-a" "--contact CONTACT" "The email address used to send you expiry notices"
     :parse-fn #(str "mailto:" %)
@@ -85,11 +87,12 @@
 
 (defn validate [spec options]
   (try
-    (domain/validate ::domain/certificaat-info options)
+    (domain/validate spec options)
     (catch ExceptionInfo e
-      (when (not (zero? (:verbosity options)))
-        (puget/cprint (s/describe ::domain/certificaat-info))
-        (puget/cprint (ex-data e)))
+      (when-let [verbosity (:verbosity options)]
+        (when (not (zero? verbosity))
+          (puget/cprint (s/describe spec))))
+      (puget/cprint (ex-data e))
       (exit 1 (.getMessage e)))))
 
 (defn validate-args
@@ -102,42 +105,75 @@
       (:help options) {:exit-message (usage summary) :ok? true}
       errors {:exit-message (error-msg errors)}
       (> (count arguments) 1) {:exit-message "Too many actions provided. See --help for usage instructions."}
-      (s/valid? ::domain/command-line-actions (first arguments)) {:action (first arguments) :options options}
+      (s/valid? ::domain/cli-actions (first arguments)) {:action (first arguments) :options options}
       :else {:exit-message (usage summary)})))
+
+(defn register [options] (k/register options))
+(defn authorize [{config-dir :config-dir domain :domain :as options}]
+  (let [reg (k/register options)]
+    (doseq [[name challenges] (k/authorize options reg)
+            i (range (count challenges))
+            challenge challenges
+            :let [explanation (k/explain challenge name)]]
+      (println explanation)
+      (spit (str config-dir domain "/" name "." (.getType challenge) ".challenge.txt") explanation)
+      (spit (str config-dir domain "/challenge." name "." i ".uri") (.getLocation challenge)))))
+(defn accept-challenges [options]
+  (try
+      (doseq [c (k/challenge options)
+              :let [resp (<!! c)]]
+        (if (= Status/VALID resp)
+          (println "Well done, challenge completed.")
+          (println "Sorry, challenge failed." resp)))
+      (catch AcmeServerException e (exit 1 (.getMessage e)))))
+(defn request [options]
+  (let [reg (k/register options)]
+    (try 
+      (k/request options reg) ; will throw AcmeUnauthorizedException if the authorizations of some or all involved domains have expired  
+      (catch AcmeUnauthorizedException e (exit 1 (.getMessage e)))) ))
+
+(defn run [{config-dir :config-dir domain :domain :as options}]
+  (let [config-dir-listing (.listFiles (io/file (str config-dir)))
+        domain-dir-listing (.listFiles (io/file (str config-dir domain)))
+        listing (concat config-dir-listing domain-dir-listing)
+        files (filter #(.isFile %) listing)]
+    (condp not-any? files
+      #(= "registration.uri" (.getName %)) (register options)
+      #(re-find (re-pattern (str "challenge." domain "." "\\d+" ".uri")) (.getName %)) (do (authorize options)
+                                                                                           (h/run-hooks :before-challenge options))
+      #(= "certificate.uri" (.getName %)) (do (accept-challenges options)
+                                              (request options)
+                                              (h/run-hooks :after-request options))
+      (exit 0 "Nothing left to do at this point in time."))))
 
 (defn certificaat [args]
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
-        "authorize" (let [options (validate ::domain/certificaat-authorize options)
-                          {config-dir :config-dir domain :domain} options
-                          _ (k/setup options)
-                          reg (k/register options)]
-                      (doseq [[name challenges] (k/authorize options reg)
-                              i (range (count challenges))
-                              challenge challenges
-                              :let [explanation (k/explain challenge name)]]
-                        (println explanation)
-                        (spit (str config-dir domain "/" name "." (.getType challenge) ".challenge.txt") explanation)
-                        (spit (str config-dir domain "/challenge." name "." i ".uri") (.getLocation challenge)))) 
-        "request"  (let [options (validate ::domain/certificaat-request options)
-                         reg (k/register options)]
-                     (try
-                       (doseq [c (k/challenge options)
-                               :let [resp (<!! c)]]
-                         (if (= Status/VALID resp)
-                           (println "Well done, challenge completed.")
-                           (println "Sorry, challenge failed." resp)))
-                       (catch AcmeServerException e (exit 1 (.getMessage e))))
-                     (k/request options reg))
-        "renew" (let [options (validate ::domain/certificaat-renew options)]
-                  (try (k/renew options)
-                       (catch AcmeUnauthorizedException e (exit 1 (.getMessage e)))))
-        "info" (let [options (validate ::domain/certificaat-info options)]
+        "init"      (let [cli-options (validate ::domain/cli-options options)
+                          config-options (validate ::domain/config c/defaults)
+                          options (merge config-options cli-options)]
+                      (k/setup options))
+        "run"       (let [cli-options (validate ::domain/cli-options options)
+                          config-options (validate ::domain/config (c/read-config cli-options))
+                          options (merge config-options cli-options)]
+                      (loop []
+                        (run options)
+                        (recur))) 
+        "reset"     (let [options (validate ::domain/cli-options options)]
+                      (try (t/confirm-dialog "Are you sure?" (str "This will delete everything under " (:config-dir options) (:domain options)))
+                           (c/delete-domain-config-dir! options)
+                           (catch Exception e (println (.getMessage e)))))
+        "info" (let [cli-options (validate ::domain/cli-options options)
+                     config-options (validate ::domain/config (c/read-config options))]
                   (puget/cprint (try
-                                  (k/info options)
-                                  (catch java.io.FileNotFoundException e (.getMessage e)))))
-        "plugin" (let [options (validate ::domain/certificaat-plugin options)]
-                   (w/webroot options))))))
+                                  (k/info cli-options)
+                                  (catch java.io.FileNotFoundException e (.getMessage e))))
+                  (when (not (zero? (:verbosity options)))
+                    (puget/cprint config-options)))
+        "cron" (let [cli-options (validate ::domain/cli-options options)
+                     config-options (validate ::domain/config (c/read-config options))
+                     options (merge config-options cli-options)]
+                   (request options))))))
 

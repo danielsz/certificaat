@@ -19,11 +19,11 @@
       (.sign keypair))))
 
 (defn persist-certificate-request [path csrb]
-  (let [fw (FileWriter. (str path "request.csr"))]
+  (let [fw (FileWriter. path)]
     (.write csrb fw)))
 
 (defn load-certificate-request [path]
-  (let [input (io/input-stream (str path "request.csr"))]
+  (let [input (io/input-stream path)]
     (CertificateUtils/readCSR input)))
 
 (defn request [csrb reg]
@@ -34,7 +34,7 @@
 
 (defn persist [path cert]
   (let [[cert chain] (download cert)
-        fw (FileWriter. (str path "domain-chain.crt"))]
+        fw (FileWriter. path)]
     (CertificateUtils/writeX509CertificateChain fw cert chain)))
 
 (defn delete [cert]
@@ -51,10 +51,8 @@
   [cert key]
   (= (.getModulus (.getPublicKey cert)) (.getModulus (.getPrivate key))))
 
-(defn info [path]
-  (let [cert-file (str path "domain-chain.crt")
-        key-file (str path "domain.key")
-        cert (CertificateUtils/readX509Certificate (io/input-stream cert-file))
+(defn info [cert-file key-file]
+  (let [cert (CertificateUtils/readX509Certificate (io/input-stream cert-file))
         issuer (.getIssuerX500Principal cert)
         subject (.getSubjectX500Principal cert)
         info {:issuer (.getName issuer)
