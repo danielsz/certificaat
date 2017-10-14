@@ -28,7 +28,7 @@
 
 (s/def ::hook #{:before-challenge :after-request})
 (s/def ::hooks (s/* ::hook))
-(s/def ::plugins (s/keys :opt-un [::dhparams ::webroot ::email] ))
+(s/def ::plugins (s/keys :opt-un [::dhparams ::webroot ::email]))
 
 (s/def ::webroot (s/keys :req-un [::path]))
 

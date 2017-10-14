@@ -3,7 +3,7 @@
             [certificaat.kung-fu :as k]
             [clojure.java.io :as io]
             [clojure.string :as str])
-  (:import java.net.URI))
+  (:import [java.net URI]))
 
 (defn webroot [{config-dir :config-dir domain :domain {{path :path} :webroot} :plugins  :as options}]
   (let [session (k/session options) 
