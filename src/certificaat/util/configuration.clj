@@ -20,7 +20,7 @@
                :hooks []
                :plugins {:webroot {:path "/tmp"}
                          :diffie-hellman {:modulus 2048
-                                          :filename "dhparams.pem"
+                                          :filename "dhparam.pem"
                                           :group14 true}
                          :email {:smtp {:host "smtp.changeme.org"
                                         :user "changeme"
