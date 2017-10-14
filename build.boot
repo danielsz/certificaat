@@ -14,6 +14,7 @@
                  [org.kohsuke/libpam4j "1.8"]
                  [mvxcvi/puget "1.0.1"]
                  [me.raynes/conch "0.8.0"]
+                 [com.draines/postal "2.0.2"]
                  [clj-http "3.6.0"]
                  [ring "1.6.1"]
                  [environ "1.1.0"]

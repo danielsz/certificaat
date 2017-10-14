@@ -20,8 +20,11 @@
                :hooks []
                :plugins {:webroot {:path "/tmp"}
                          :dhparams {:modulus 2048}
-                         :email {:smtp-login "changeme"
-                                 :smtp-password "changeme"}}})
+                         :email {:smtp {:host "smtp.changeme.org"
+                                        :user "changeme"
+                                        :pass "changeme"
+                                        :port 587}
+                                 :sendmail false}}})
 
 (defn add-keypair [path keypair]
   (let [file (io/file path)]
