@@ -19,7 +19,9 @@
                :challenges #{"http-01"}
                :hooks []
                :plugins {:webroot {:path "/tmp"}
-                         :dhparams {:modulus 2048}
+                         :diffie-hellman {:modulus 2048
+                                          :filename "dhparams.pem"
+                                          :group14 true}
                          :email {:smtp {:host "smtp.changeme.org"
                                         :user "changeme"
                                         :pass "changeme"

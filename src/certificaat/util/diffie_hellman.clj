@@ -24,3 +24,12 @@
 (defn group14-to-path [path]
   (let [group14 (slurp (io/resource "group14.pem"))]
     (spit path group14)))
+
+(defn dhparams [{{{group14 :group14 filename :filename modulus :modulus} :diffie-hellman} :plugins domain :domain config-dir :config-dir :as options}]
+  (let [path (str config-dir domain "/" filename)]
+    (let [file (io/file path)]
+      (when (not (.exists file))
+        (if group14
+          (group14-to-path path)
+          (save-to-pem path (generate-parameter-set modulus)))))))
+
