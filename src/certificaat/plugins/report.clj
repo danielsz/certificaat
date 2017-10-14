@@ -7,11 +7,16 @@
 
 (defn report [{{{sendmail :sendmail smtp :smtp} :email} :plugins domain :domain contact :contact :as options}]
   (let [info (k/info options)
-        body (puget/render-str (puget/pretty-printer {:color-markup :html-inline :print-color true}) info)
+        html (puget/render-str (puget/pretty-printer {:color-markup :html-inline :print-color true}) info)
+        text (puget/render-str (puget/pretty-printer {}) info)
         m {:from (str "certificaat-cron@" domain)
            :to (.getPath  (URL. contact))
            :subject (str "Certificaat run " (LocalDate/now))
-           :body body}]
+           :body [:alternative
+                  {:type "text/plain"
+                   :content text}
+                  {:type "text/html"
+                   :content html}]}]
     (if sendmail
       (send-message m)
       (send-message smtp m))))
