@@ -11,7 +11,7 @@
         text (puget/render-str (puget/pretty-printer {}) info)
         m {:from (str "certificaat-cron@" domain)
            :to (.getPath  (URL. contact))
-           :subject (str "Certificaat run " (LocalDate/now))
+           :subject (str "Certificaat " (LocalDate/now))
            :body [:alternative
                   {:type "text/plain"
                    :content text}
