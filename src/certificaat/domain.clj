@@ -29,8 +29,11 @@
 (s/def ::hook #{:before-challenge :after-request})
 (s/def ::hooks (s/* ::hook))
 (s/def ::plugins (s/keys :opt-un [::dhparams ::webroot ::email]))
+(s/def ::enabled boolean?)
 
-(s/def ::webroot (s/keys :req-un [::path]))
+(s/def ::webroot (s/keys :req-un [::path ::enabled]))
+(s/def ::dhparams (s/keys :req-un [::enabled]))
+(s/def ::email (s/keys :req-un [::enabled]))
 
 (s/def ::cli-actions #{"init" "run" "config" "reset" "info" "cron"})
 (s/def ::cli-options (s/keys :req-un [::config-dir ::domain]))

@@ -25,11 +25,12 @@
   (let [group14 (slurp (io/resource "group14.pem"))]
     (spit path group14)))
 
-(defn params [{{{group14 :group14 filename :filename modulus :modulus} :diffie-hellman} :plugins domain :domain config-dir :config-dir :as options}]
-  (let [path (str config-dir domain "/" filename)]
-    (let [file (io/file path)]
-      (when (not (.exists file))
-        (if group14
-          (group14-to-path path)
-          (save-to-pem path (generate-parameter-set modulus)))))))
+(defn params [{{{group14 :group14 filename :filename modulus :modulus enabled :enabled} :diffie-hellman} :plugins domain :domain config-dir :config-dir :as options}]
+  (when enabled
+    (let [path (str config-dir domain "/" filename)]
+      (let [file (io/file path)]
+        (when (not (.exists file))
+          (if group14
+            (group14-to-path path)
+            (save-to-pem path (generate-parameter-set modulus))))))))
 

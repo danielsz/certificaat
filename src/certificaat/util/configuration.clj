@@ -11,18 +11,21 @@
                :keypair-filename "account.key"
                :key-type :rsa
                :key-size 2048
-               :acme-uri "acme://letsencrypt.org/staging"
+               :acme-uri "acme://letsencrypt.org/staging" ; in production, use acme://letsencrypt.org
                :domain "change.me"
                :san #{"www.change.me"}
                :organisation "ChangeMe corporation"
                :contact "mailto:admin@change.me"
                :challenges #{"http-01"}
-               :hooks []
-               :plugins {:webroot {:path "/tmp"}
-                         :diffie-hellman {:modulus 2048
+               :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
+               :plugins {:webroot {:enabled false
+                                   :path "/tmp"}
+                         :diffie-hellman {:enabled false
+                                          :modulus 2048
                                           :filename "dhparam.pem"
                                           :group14 true}
-                         :email {:smtp {:host "smtp.changeme.org"
+                         :email {:enabled false
+                                 :smtp {:host "smtp.changeme.org"
                                         :user "changeme"
                                         :pass "changeme"
                                         :port 587}
