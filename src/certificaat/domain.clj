@@ -13,7 +13,7 @@
 
 (s/def ::path (s/and string? #(try (.exists (io/file %))
                                    (catch java.io.IOException e false))))
-(s/def ::config-dir ::path)
+(s/def ::config-dir string?)
 (s/def ::keypair-filename string?)
 (s/def ::acme-uri (s/and string? #(.isAbsolute (URI. %))))
 (s/def ::contact (s/and string? #(.isOpaque (URI. %))))
