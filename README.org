@@ -1,6 +1,9 @@
 * Certificaat
 ** Definition
 Certificaat is a general-purpose [[https://tools.ietf.org/html/draft-ietf-acme-acme-06][ACME]] client, fully compatible with the [[https://letsencrypt.org/][Let’s Encrypt]] CA.
+** Motivation
+Certificaat’s aim is to retrieve a certificate for your domain, and then run it as a cron job and forget about it. 
+/Note:/ [[https://certbot.eff.org/][certbot]] does everything for everybody. It certainly works, but I remember struggling with usability. 
 ** Installation
 [[https://github.com/danielsz/certificaat/releases/latest][Download]] the latest release, extract the archive and drop the self-contained binary in your ~PATH~.
 
@@ -9,8 +12,47 @@ Certificaat is a general-purpose [[https://tools.ietf.org/html/draft-ietf-acme-a
 ** Usage
 *** Command line
 
-Type ~certificaat -h~ to familiarize yourself with the input it
-expects.
+To get a certificate for a domain, you need to initialize ~certificaat~ with said domain, then you ~run~ it repeatedly until your certificate has downloaded.
+
+1. ~certificaat -m change.me init~
+2. ~certificaat -m change.me run~
+
+The certificate can be renewed in one pass with ~certificaat -m change.me cron~.
+
+**** Init
+
+
+#+BEGIN_SRC shell
+certificaat -m change.me init
+#+END_SRC
+
+The ~-m~ option indicates the domain you want to authorize. It will feature in the Subject name of the final X.509 certificate.
+
+#+BEGIN_SRC shell
+certificaat -m change.me -n www.change.me init
+#+END_SRC
+
+The ~-n~ option is for additional domain name you want to
+authorize. It will feature in the Subject Alternative Name a(SAN) of
+the certificate. Repeat this option for all required names. Caution:
+there is a hard limit imposed by the CA.
+ 
+During this phase, certificaat will, if needed, register a user
+account with the ACME CA, and write configuration files that you then
+can edit and customize.
+
+Certificaat follows the [[https://specifications.freedesktop.org/basedir-spec/latest/][XDG Base Directory Specification]]. The
+configuration folder is determined by querying the value of
+~XDG_CONFIG_HOME~ in the environment, and if not set, will default to
+~$HOME/.config/certificaat~.
+
+Configuration files are in [[https://github.com/edn-format/edn][~edn~]] format and can be edited in any text
+editor. 
+
+The local configuration file has fields for options such as: 
+- the email address used by the CA to send expiry reminders.
+- the challenge you want to complete. If you want to offer the CA multiple challenges, that is supported as well. 
+- the URI to the ACME CA. 
 
 By default, Certificaat will talk to Let’s Encrypt’s staging
 server. The resulting certificates will be fake. This is so you can
@@ -19,45 +61,38 @@ practice until you are ready to issue a production certificate.
 | Staging URI                    | Production URI         |
 | acme://letsencrypt.org/staging | acme://letsencrypt.org |
 
-To get a certificate for a domain, you need to run ~certificaat~ twice with different options:
+The global configuration is used for plugins. 
 
-1. ~certificaat authorize~
-2. ~certificaat request~
+The local configuration is stored in the project directory and
+the global configuration is stored in the root directory. For example,
+~$HOME/.config/certificaat/change.me/config.edn~ and
+~$HOME/.config/certificaat/config.edn~
 
-For as long as the authorizations remain valid, the certificate can be renewed in one pass with ~certificaat renew~.
-
-/Note:/ With LetsEncrypt, cached authorizations last for 30 days from the time of validation.
-
-**** Authorization
+**** Run
 
 #+BEGIN_SRC shell
-certificaat authorize -m example.com -n www.example.com -a joe@example.com -c http-01
+certificaat -m change.me run 
 #+END_SRC
 
-During this phase, certificaat will, if needed, register a user
-account with the ACME CA, and gather the information about the domain
-you want to authorize.
+~certificaat~ will display instructions pertaining to the challenge. This is the time to satisfy the requirements (for example, configuring DNS records or preparing your web server). When you are ready, simply repeat the operation and the challenges will be triggered and, if successfully completed, a certificate downloaded and saved to disk.
 
-- “-m” option indicates the domain you want to authorize. It will feature in the Subject name of the final X.509 certificate.
-- “-a” option is the email address used by the CA to send expiry reminders.
-- “-n” option is an additional domain name you want to authorize. It will feature in the Subject Alternative Name (SAN) of the certificate. Repeat this option for all required names. Caution: there is a hard limit imposed by the CA. 
-- “-c” option is the challenge you want to complete. Repeat this option if you want to offer the CA multiple challenges. 
-- “-u” option is the URI to the ACME CA. 
+**** Hooks
 
-Before exiting, ~certificaat~ will display instructions pertaining to the challenge. This is the time to satisfy the requirements (for example, configuring DNS records or preparing your web server). You are now ready for the second phase. 
+Hooks are provided to perform additional functionality at key moments, namely before the challenges get triggered, and after a certificate has been acquired or renewed. The hooks are powered by plugins that need to be configured and enabled. 
 
-**** Request
+The plugin configuration resides in the root directory, ~XDG_CONFIG_HOME/.config/certificaat/config.edn~
 
-#+BEGIN_SRC shell
-certificaat request -m example.com -n www.example.com -o "Example corp." 
-#+END_SRC
-
-During this phase, the challenges will be triggered and, if successfully completed, a certificate downloaded and saved to disk.
+***** Webroot
+This enables authorizing and requesting the certificate in a single pass.
+***** Email
+An email will be sent to the contact registered with the certificate. 
+***** Diffie-Helman parameters
+This will save a Diffie-Helman parameters file along with the certificate, for further tuning the SSL setup.
 
 **** Info
 
 #+BEGIN_SRC shell
-certificaat info -m example.com
+certificaat -m example.com info
 #+END_SRC
 
 Certificaat will display a summary of the certificate. 
@@ -65,13 +100,13 @@ Certificaat will display a summary of the certificate.
 **** Renew
 
 #+BEGIN_SRC shell
-certificaat renew -m example.com 
+certificaat -m example.com cron
 #+END_SRC
 
 This command can be integrated in an automated workflow. For example, as a cron job.
 
 #+BEGIN_SRC shell
-5 8 1 * * certificaat renew -m example.com && /usr/sbin/service nginx reload
+5 8 1 * * certificaat -m change.me cron && /usr/sbin/service nginx reload
 #+END_SRC
 ** Challenges
 
@@ -83,8 +118,6 @@ Certificaat will honor all challenges defined in the ACME specification, but ple
 | TLS with Server Name Indication (SNI) | tls-sni-01 & tls-sni-02 | ✓ & ✕         | ✓           |
 | Out-of-Band                           | oob-01                  | ✕             | ✓           |
 
-** Data folder
-Certificaat follows the [[https://specifications.freedesktop.org/basedir-spec/latest/][XDG Base Directory Specification]]. The configuration folder is determined by querying the value of ~XDG_CONFIG_HOME~ in the environment, and if not set, will default to ~$HOME/.config/certificaat~.
 ** Clojure library
 In addition to the command line, Certificaat is available on [[https://clojars.org/][Clojars]] as a regular Clojure library which you can require in your projects.
 
@@ -92,30 +125,14 @@ In addition to the command line, Certificaat is available on [[https://clojars.o
 
 /Note/: a single namespace exposes a core API which is made available to all interfaces.
 
-*** Boot
-Certificaat comes with [[http://boot-clj.com/][Boot]] tasks which you can integrate in your builds. This interface offers the same functionality as the binary, which you will find in the ~certificaat.interface.boot~ namespace. 
-
-In a ~build.boot~ file, define the following tasks and use them the way you see fit.
-
-#+BEGIN_SRC clojure
-(deftask authorize []
-  (comp
-   (certificaat-setup :domain "example.com")
-   (certificaat-authorize :domain "example.com" :challenges #{"dns-01"} :san #{"www.example.com"} :contact "mailto:joe@example.com")))
-
-(deftask request []
-  (comp
-   (certificaat-challenge :domain "example.com")
-   (certificaat-request :domain "example.com" :organisation "Example corp." :san #{"www.example.com"})))
-
-(deftask renew []
-  (comp (certificaat-renew :domain "example.com")
-        (certificaat-info :domain "example.com")))
-
-#+END_SRC
 ** Contributions
 If you plan to submit enhancements beyond bug fixes, please coordinate with me beforehand in order to save everybody’s time and effort.
 ** Credits
 I wish to thank [[https://shredzone.org/maven/acme4j/][Richard Körber]] who wrote the Java client for the ACME protocol, [[https://github.com/shred/acme4j][acme4j]], which serves as the foundation for Certificaat. Not only is it well written, it is exquisitely [[https://shredzone.org/maven/acme4j/][documented]]. 
 ** License
 Licensing terms will be revealed shortly. In the meantime, do what you want with it.
+Type ~certificaat -h~ to familiarize yourself with the input it
+expects.
+For as long as the authorizations remain valid, 
+
+/Note:/ With LetsEncrypt, cached authorizations last for 30 days from the time of validation.
