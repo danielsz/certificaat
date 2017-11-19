@@ -46,7 +46,7 @@
           :let [auth (authorization/create domain reg)]]
       [domain auth (challenge/find auth challenges)])))
 
-(defn authorize2 [{:keys [config-dir domain san challenges]}]
+(defn authorize2 [{:keys [config-dir domain san challenges] :as options}]
   (let [session (session options)
         domains (if san
                   (conj san domain)
