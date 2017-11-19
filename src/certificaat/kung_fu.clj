@@ -53,7 +53,7 @@
                   [domain])]
     (doseq [domain domains
             :let [frozen-authorization (str config-dir domain "/authorization." domain ".uri")
-                  uri (slurp (new URI (slurp frozen-authorization)))
+                  uri (new URI (slurp frozen-authorization))
                   auth (authorization/restore session uri)]]
       (println (.getDomain auth))
       (println (.getStatus auth))
