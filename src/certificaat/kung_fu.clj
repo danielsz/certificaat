@@ -46,6 +46,19 @@
           :let [auth (authorization/create domain reg)]]
       [domain auth (challenge/find auth challenges)])))
 
+(defn authorize2 [{:keys [config-dir domain san challenges]}]
+  (let [session (session options)
+        domains (if san
+                  (conj san domain)
+                  [domain])]
+    (doseq [domain domains
+            :let [frozen-authorization (str config-dir domain "/authorization." domain ".uri")
+                  uri (slurp (new URI (slurp frozen-authorization)))
+                  auth (authorization/restore session uri)]]
+      (println (.getDomain auth))
+      (println (.getStatus auth))
+      (println (.getExpires auth)))))
+
 (defn challenge [{domain :domain config-dir :config-dir :as options}]
   (let [session (session options) 
         frozen-challenges (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file (str config-dir domain))))]

@@ -180,7 +180,8 @@
                     (puget/cprint config-options)))
         "cron" (let [cli-options (validate ::domain/cli-options options)
                      config-options (validate ::domain/config (c/read-config options))
-                     options (merge config-options cli-options)]
+                     options (merge config-options cli-options)
+                     _ (k/authorize2 options)]
                  (do (request options)
                      (h/run-hooks :after-request options)))))))
 
