@@ -116,13 +116,14 @@
 (defn register [options] (k/register options))
 (defn authorize [{config-dir :config-dir domain :domain :as options}]
   (let [reg (k/register options)]
-    (doseq [[name challenges] (k/authorize options reg)
+    (doseq [[name auth challenges] (k/authorize options reg)
             i (range (count challenges))
             challenge challenges
             :let [explanation (k/explain challenge name)]]
       (println explanation)
       (spit (str config-dir domain "/" name "." (.getType challenge) ".challenge.txt") explanation)
-      (spit (str config-dir domain "/challenge." name "." i ".uri") (.getLocation challenge)))))
+      (spit (str config-dir domain "/challenge." name "." i ".uri") (.getLocation challenge))
+      (spit (str config-dir domain "/authorization." name ".uri") (.getLocation auth)))))
 (defn accept-challenges [options]
   (try
       (doseq [c (k/challenge options)

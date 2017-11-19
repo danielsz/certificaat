@@ -44,7 +44,7 @@
                   [domain])]
     (for [domain domains
           :let [auth (authorization/create domain reg)]]
-      [domain (challenge/find auth challenges)])))
+      [domain auth (challenge/find auth challenges)])))
 
 (defn challenge [{domain :domain config-dir :config-dir :as options}]
   (let [session (session options) 
