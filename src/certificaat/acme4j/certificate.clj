@@ -2,6 +2,7 @@
   (:require [certificaat.acme4j.account :as account]
             [certificaat.acme4j.registration :as registration]
             [certificaat.domain :refer [Certificaat]]
+            [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j Certificate]
@@ -73,6 +74,7 @@
 (extend-type Certificate
   Certificaat
   (valid? [this] (let [cert (.download this)]
+                   (log/info "Certificate expires after" (.getNotAfter cert))
                    (try (.checkValidity cert)
                         true
                         (catch CertificateExpiredException e false)
