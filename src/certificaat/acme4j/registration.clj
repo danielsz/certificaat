@@ -2,6 +2,7 @@
   (:require [certificaat.acme4j.account :as account]
             [certificaat.acme4j.session :as session]
             [certificaat.util.tentoonstelling :as t]
+            [certificaat.domain :refer [Certificaat]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]])
   (:import [org.shredzone.acme4j Registration RegistrationBuilder]
@@ -36,3 +37,7 @@
 
 (defn delete [reg]
   (.deactivate reg))
+
+(extend-type Registration
+  Certificaat
+  (valid? [this] true))

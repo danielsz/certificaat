@@ -1,11 +1,13 @@
 (ns certificaat.acme4j.certificate
   (:require [certificaat.acme4j.account :as account]
             [certificaat.acme4j.registration :as registration]
+            [certificaat.domain :refer [Certificaat]]
             [environ.core :refer [env]]
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j Certificate]
            [org.shredzone.acme4j.util CSRBuilder CertificateUtils]
            [org.shredzone.acme4j.util KeyPairUtils]
+           [java.security.cert CertificateExpiredException CertificateNotYetValidException]
            [java.io FileWriter FileReader]))
 
 (defn prepare [keypair domain organization & [additional-domains]]
@@ -68,3 +70,10 @@
       info)))
 
 
+(extend-type Certificate
+  Certificaat
+  (valid? [this] (let [cert (.download this)]
+                   (try (.checkValidity cert)
+                        true
+                        (catch CertificateExpiredException e false)
+                        (catch CertificateNotYetValidException e false)))))

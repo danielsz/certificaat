@@ -5,12 +5,15 @@
             [certificaat.acme4j.challenge :as challenge]
             [certificaat.acme4j.registration :as registration]
             [certificaat.acme4j.session :as session]
+            [certificaat.util.configuration :as c]
+            [certificaat.domain :as d]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [certificaat.util.configuration :as c])
+            [clojure.spec.alpha :as s])
   (:import java.net.URI
-           org.shredzone.acme4j.exception.AcmeUnauthorizedException))
+           org.shredzone.acme4j.exception.AcmeUnauthorizedException
+           org.shredzone.acme4j.Status))
 
 (defn setup [{:keys [config-dir domain key-type key-size keypair-filename] :as options}]
   (let [account-keypair (account/keypair key-type key-size)
@@ -26,17 +29,15 @@
     (session/create keypair acme-uri)))
 
 (defn register [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
-  (let [frozen-registration (io/file (str config-dir "registration.uri"))]
-    (if (.exists frozen-registration)
-      (let [registration-uri (new URI (slurp frozen-registration))
-            session (session options)]
-        (registration/restore session registration-uri))
-      (let [keypair (account/restore config-dir keypair-filename)
-            reg (registration/create keypair acme-uri contact)]
-        (c/save-agreement config-dir reg)
-        (registration/accept-agreement reg)
-        (spit (str config-dir "registration.uri") (.getLocation reg))
-        reg))))
+  (if-let [registration-uri (c/load-uri (str config-dir "registration.uri"))]
+    (let [session (session options)]
+      (registration/restore session registration-uri))
+    (let [keypair (account/restore config-dir keypair-filename)
+          reg (registration/create keypair acme-uri contact)]
+      (c/save-agreement config-dir reg)
+      (registration/accept-agreement reg)
+      (spit (str config-dir "registration.uri") (.getLocation reg))
+      reg)))
 
 (defn authorize [{:keys [config-dir domain san challenges]} reg]
   (let [domains (if san
@@ -46,18 +47,18 @@
           :let [auth (authorization/create domain reg)]]
       [domain auth (challenge/find auth challenges)])))
 
-(defn authorize2 [{:keys [config-dir domain san challenges] :as options}]
-  (let [session (session options)
-        domains (if san
-                  (conj san domain)
-                  [domain])]
-    (doseq [domain domains
-            :let [frozen-authorization (str config-dir domain "/authorization." domain ".uri")
-                  uri (new URI (slurp frozen-authorization))
-                  auth (authorization/restore session uri)]]
-      (println (.getDomain auth))
-      (println (.getStatus auth))
-      (println (.getExpires auth)))))
+(defn valid? [frozen-resource options]
+  (let [session (session options)]
+    (condp s/valid? (.getName (io/as-file frozen-resource))
+      ::d/registration-uri (if-let [registration-uri (c/load-uri frozen-resource)]
+                            (let [registration (registration/restore session registration-uri)]
+                              (d/valid? registration)))
+      ::d/authorization-uri (if-let [authorization-uri (c/load-uri frozen-resource)]
+                             (let [authorization (authorization/restore session authorization-uri)]
+                               (d/valid? authorization)))
+      ::d/certificate-uri (if-let [certificate-uri (c/load-uri frozen-resource)]
+                           (let [certificate (certificate/restore session certificate-uri)]
+                             (d/valid? certificate))))))
 
 (defn challenge [{domain :domain config-dir :config-dir :as options}]
   (let [session (session options) 

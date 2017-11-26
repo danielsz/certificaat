@@ -13,7 +13,7 @@
             [puget.printer :as puget]
             [clojure.java.io :as io])
   (:import clojure.lang.ExceptionInfo
-           (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException)
+           (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitExceededException)
            org.shredzone.acme4j.Status))
 
 (def cli-options
@@ -135,22 +135,19 @@
 (defn request [options]
   (let [reg (k/register options)]
     (try 
-      (k/request options reg) ; will throw AcmeUnauthorizedException if the authorizations of some or all involved domains have expired  
+      (k/request options reg) ; will throw AcmeUnauthorizedException if the authorizations of some or all involved domains have expired
+      (catch AcmeRateLimitExceededException e (exit 1 (.getMessage e)))
       (catch AcmeUnauthorizedException e (exit 1 (.getMessage e)))) ))
 
 (defn run [{config-dir :config-dir domain :domain :as options}]
-  (let [config-dir-listing (.listFiles (io/file (str config-dir)))
-        domain-dir-listing (.listFiles (io/file (str config-dir domain)))
-        listing (concat config-dir-listing domain-dir-listing)
-        files (filter #(.isFile %) listing)]
-    (condp not-any? files
-      #(= "registration.uri" (.getName %)) (register options)
-      #(re-find (re-pattern (str "challenge." domain "." "\\d+" ".uri")) (.getName %)) (do (authorize options)
-                                                                                           (h/run-hooks :before-challenge options))
-      #(= "certificate.uri" (.getName %)) (do (accept-challenges options)
-                                              (request options)
-                                              (h/run-hooks :after-request options))
-      (exit 0 "Nothing left to do at this point in time."))))
+  (cond
+    (not (k/valid? (str config-dir "registration.uri") options)) (register options)
+    (not (k/valid? (str config-dir domain "/authorization." domain ".uri") options)) (do (authorize options)
+                                                                                         (h/run-hooks :before-challenge options))
+    (not (k/valid? (str config-dir domain "/certificate.uri") options)) (do (accept-challenges options)
+                                                                            (request options)
+                                                                            (h/run-hooks :after-request options))
+    :else (exit 0 "Nothing left to do at this point in time.")))
 
 (defn certificaat [args]
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
@@ -164,9 +161,11 @@
         "run"       (let [cli-options (validate ::domain/cli-options options)
                           config-options (validate ::domain/config (c/read-config cli-options))
                           options (merge config-options cli-options)]
-                      (loop []
-                        (run options)
-                        (recur))) 
+                      (loop [t 3]
+                        (if (> t 0)
+                            (run options)
+                            (exit 1 (str "Quitting for now")))
+                        (recur (dec t)))) 
         "reset"     (let [options (validate ::domain/cli-options options)]
                       (try (t/confirm-dialog "Are you sure?" (str "This will delete everything under " (:config-dir options) (:domain options)))
                            (c/delete-domain-config-dir! options)
@@ -180,8 +179,7 @@
                     (puget/cprint config-options)))
         "cron" (let [cli-options (validate ::domain/cli-options options)
                      config-options (validate ::domain/config (c/read-config options))
-                     options (merge config-options cli-options)
-                     _ (k/authorize2 options)]
-                 (do (request options)
-                     (h/run-hooks :after-request options)))))))
+                     options (merge config-options cli-options)]
+                 (request options)
+                 (h/run-hooks :after-request options))))))
 

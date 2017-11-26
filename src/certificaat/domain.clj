@@ -25,6 +25,11 @@
 (s/def ::organisation string?)
 (s/def ::challenge #{"http-01" "dns-01" "tls-sni-01" "tls-sni-02" "oob-01"})
 (s/def ::challenges (s/coll-of ::challenge :kind set?))
+(s/def ::challenge-uri #(re-matches #"challenge\..*\.\d+\.uri" %))
+(s/def ::authorization-uri #(re-matches #"authorization\..*\.uri" %))
+(s/def ::registration-uri #(re-matches #"registration.uri" %))
+(s/def ::certificate-uri #(re-matches #"certificate.uri" %))
+
 
 (s/def ::hook #{:before-challenge :after-request})
 (s/def ::hooks (s/* ::hook))
@@ -40,7 +45,8 @@
 (s/def ::config (s/keys :req-un [::acme-uri ::domain ::challenges ::contact ::plugins ::hooks]
                         :opt-un [::san]))
 
-
+(defprotocol Certificaat
+  (valid? [this]))
 
 (def realms (-> (make-hierarchy)
                 (derive :config-dir ::program)

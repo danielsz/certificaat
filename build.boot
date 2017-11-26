@@ -3,7 +3,7 @@
  :resource-paths #{"src" "resources"}
  :dependencies '[[adzerk/boot-jar2bin "1.1.0" :scope "test"]
                  [org.clojure/test.check "0.10.0-alpha2" :scope "test"]
-                 [org.clojure/clojure "1.9.0-beta2"]
+                 [org.clojure/clojure "1.9.0-RC1"]
                  [org.clojure/core.async "0.3.442"]
                  [org.danielsz/lang-utils "0.1.0-SNAPSHOT"]
                  [org.shredzone.acme4j/acme4j-client "0.13"]

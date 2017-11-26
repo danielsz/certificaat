@@ -5,7 +5,8 @@
             [certificaat.domain :as domain]
             [environ.core :refer [env]]
             [puget.printer :as puget]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import java.net.URI))
 
 (def defaults {:config-dir (str (or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/")) "certificaat/")
                :keypair-filename "account.key"
@@ -13,13 +14,14 @@
                :key-size 2048
                :acme-uri "acme://letsencrypt.org/staging" ; in production, use acme://letsencrypt.org
                :domain "change.me"
-               :san #{"www.change.me"}
+               :san #{}
                :organisation "ChangeMe corporation"
                :contact "mailto:admin@change.me"
                :challenges #{"http-01"}
                :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
                :plugins {:webroot {:enabled false
                                    :path "/tmp"}
+                         :httpd {:enabled false}
                          :diffie-hellman {:enabled false
                                           :modulus 2048
                                           :filename "dhparam.pem"
@@ -70,3 +72,8 @@
         filename (last (str/split (.getPath url) #"/"))]
     (with-open [w (io/output-stream (str config-dir filename))]
       (.write w agreement))))
+
+(defn load-uri [path]
+  (let [uri-resource (io/file path)]
+    (when (.exists uri-resource)
+      (new URI (slurp uri-resource)))))
