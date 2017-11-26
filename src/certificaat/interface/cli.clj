@@ -155,7 +155,13 @@
                     (puget/cprint config-options)))
         "cron" (let [cli-options (validate ::domain/cli-options options)
                      config-options (validate ::domain/config (c/read-config options))
-                     options (merge config-options cli-options)]
-                 (request options)
+                     options (merge config-options cli-options)
+                     {domain :domain config-dir :config-dir} options]
+                 (if (k/valid? (str config-dir domain "/authorization." domain ".uri") options)
+                   (request options)
+                   (do (authorize options)
+                       (h/run-hooks :before-challenge options)
+                       (accept-challenges options)
+                       (request options)))
                  (h/run-hooks :after-request options))))))
 
