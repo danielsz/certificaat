@@ -1,7 +1,7 @@
 (ns certificaat.plugins.server
   (:require
    [certificaat.kung-fu :as k]
-   [ring.adapter.jetty :refer [run-jetty]]
+   [immutant.web :refer [run stop]]
    [clojure.string :as str]
    [clojure.java.io :as io]))
 
@@ -12,7 +12,7 @@
      :body content}))
 
 (defn start-server [handler]
-  (let [server (run-jetty handler {:port 3010 :join? false})]
+  (let [server (run handler {:port 3010})]
     server))
 
 (defn listen [{{{enabled :enabled} :httpd} :plugins config-dir :config-dir domain :domain :as options}]

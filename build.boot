@@ -16,6 +16,7 @@
                  [me.raynes/conch "0.8.0"]
                  [com.draines/postal "2.0.2"]
                  [clj-http "3.6.0"]
+                 [org.immutant/web "2.1.9"]
                  [ring "1.6.1"]
                  [environ "1.1.0"]
                  [boot-environ "1.1.0"]])

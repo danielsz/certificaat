@@ -20,36 +20,12 @@
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."
     :default (:config-dir c/defaults)
     :validate [#(s/valid? ::domain/config-dir %) "Must be a string"]]
-   ["-k" "--keypair-filename KEYPAIR-FILENAME" "The name of the keypair file used to register the ACME account."
-    :default (:keypair-filename c/defaults)
-    :validate [#(s/valid? ::domain/keypair-filename %) "Must be a string"]]
-   ["-t" "--key-type KEY-TYPE" "The key type, one of RSA or Elliptic Curve."
-    :default (:key-type c/defaults)
-    :parse-fn keyword
-    :validate [#(s/valid? ::domain/key-type %) "Must be rsa or ec"]]
-   ["-s" "--key-size KEY-SIZE" "Key length used to create a RSA private key."
-    :default (:key-size c/defaults)
-    :parse-fn #(Integer/parseInt %)
-    :validate [#(s/valid? ::domain/key-size %) "Must be 1024, 2048 or 4096"]]
    ["-m" "--domain DOMAIN" "The domain you wish to authorize"
     :validate [#(s/valid? ::domain/domain %) "Must be a valid domain"]]
    ["-n" "--san SAN" "Subject Alternative Name. Additional domain to be authorized. You can repeat this option."
     :parse-fn #(set [%])
     :assoc-fn (fn [m k v] (update-in m [k] #(into #{} (set/union % v))))
     :validate [#(s/valid? ::domain/san %) "Must be a valid domain"]]
-   ["-c" "--challenges CHALLENGES" "A challenge you can complete. You can repeat this option."
-    :parse-fn #(set [%])
-    :assoc-fn (fn [m k v] (update-in m [k] #(into #{} (set/union % v))))
-    :validate [#(s/valid? ::domain/challenges %) "Must be one of dns-01 or http-01"]]
-   ["-u" "--acme-uri ACME-URI" "The URI of the ACME server’s directory service as documented by the CA."
-    :validate [#(s/valid? ::domain/acme-uri %) "Must be a valid URI."]]
-   ["-a" "--contact CONTACT" "The email address used to send you expiry notices"
-    :parse-fn #(str "mailto:" %)
-    :validate [#(s/valid? ::domain/contact %) "Must be a valid mailto URI."]]
-   ["-o" "--organisation ORGANISATION" "The organisation you with to register with the cerfiticate"
-    :validate [#(s/valid? ::domain/organisation %) "Must be a string."]]
-   ["-w" "--webroot WEBROOT" "Web server directory where the ACME challenge files reside"
-    :validate [#(s/valid? ::domain/webroot %) "Must be a valid directory in the file system"]]
    ["-v" nil "Verbosity level"
     :id :verbosity
     :default 0
