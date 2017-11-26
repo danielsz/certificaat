@@ -22,5 +22,6 @@
 (extend-type Authorization
   Certificaat
   (valid? [this]
-    (log/info (.getStatus this))
-    (= Status/VALID (.getStatus this)))) ; (.isBefore (.getExpires this) (Instant/now)))
+    (let [status (.getStatus this)])
+    (log/info status)
+    (or (= Status/VALID status) (= Status/PENDING status)))) ; (.isBefore (.getExpires this) (Instant/now)))
