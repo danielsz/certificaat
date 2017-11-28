@@ -46,27 +46,52 @@ configuration folder is determined by querying the value of
 ~XDG_CONFIG_HOME~ in the environment, and if not set, will default to
 ~$HOME/.config/certificaat~.
 
-Configuration files are in [[https://github.com/edn-format/edn][~edn~]] format and can be edited in any text
+Configuration files are in [[https://github.com/edn-format/edn][edn]] format and can be edited in any text
 editor. 
 
-The local configuration file has fields for options such as: 
+The local configuration file is stored in the project directory,
+~$HOME/.config/certificaat/change.me/config.edn~ , and looks like
+this:
+
+#+BEGIN_SRC clojure
+{:acme-uri "acme://letsencrypt.org/staging",
+ :challenges #{"http-01"},
+ :contact "mailto:admin@change.me",
+ :domain "change.me",
+ :hooks [:before-challenge :after-request],
+ :organisation "ChangeMe corporation",
+ :san #{"www.change.me"}}
+#+END_SRC
+
+Hopefully, the options are self-explanatory. 
+
 - the email address used by the CA to send expiry reminders.
 - the challenge you want to complete. If you want to offer the CA multiple challenges, that is supported as well. 
-- the URI to the ACME CA. 
-
-By default, Certificaat will talk to Let’s Encrypt’s staging
-server. The resulting certificates will be fake. This is so you can
-practice until you are ready to issue a production certificate.
+- the URI to the ACME CA. By default, Certificaat will talk to Let’s Encrypt’s staging server. The resulting certificates will be fake. This is so you can practice until you are ready to issue a production certificate.
 
 | Staging URI                    | Production URI         |
 | acme://letsencrypt.org/staging | acme://letsencrypt.org |
 
-The global configuration is used for plugins. 
+The global configuration is stored in the root directory,
+~$HOME/.config/certificaat/change.me/config.edn~ and it looks like
+this:
 
-The local configuration is stored in the project directory and
-the global configuration is stored in the root directory. For example,
-~$HOME/.config/certificaat/change.me/config.edn~ and
-~$HOME/.config/certificaat/config.edn~
+#+BEGIN_SRC clojure
+{:key-size 2048,
+ :key-type :rsa,
+ :keypair-filename "account.key",
+ :plugins {:diffie-hellman {:enabled false,
+                            :filename "dhparam.pem",
+                            :group14 true,
+                            :modulus 2048},
+           :email {:enabled false,
+                   :sendmail false,
+                   :smtp {:host "smtp.changeme.org",
+                          :pass "changeme",
+                          :port 587,
+                          :user "changeme"}},
+           :webroot {:enabled false, :path "/tmp"}}}
+#+END_SRC
 
 **** Run
 
