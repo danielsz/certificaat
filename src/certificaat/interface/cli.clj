@@ -57,7 +57,6 @@
         ""]
        (str/join \newline)))
 
-
 (defn error-msg [errors]
   (str "The following errors occurred while parsing your command:\n\n"
        (str/join \newline errors)))
@@ -124,6 +123,14 @@
                                                                             (request options)
                                                                             (h/run-hooks :after-request options))
     :else (exit 0 "Nothing left to do at this point in time.")))
+(defn renew [{domain :domain config-dir :config-dir :as options}]
+  (if (k/valid? (str config-dir domain "/authorization." domain ".uri") options)
+    (request options)
+    (do (authorize options)
+        (h/run-hooks :before-challenge options)
+        (accept-challenges options)
+        (request options)))
+  (h/run-hooks :after-request options))
 
 (defn certificaat [args]
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
@@ -155,13 +162,5 @@
                     (puget/cprint config-options)))
         "cron" (let [cli-options (validate ::domain/cli-options options)
                      config-options (validate ::domain/config (c/read-config options))
-                     options (merge config-options cli-options)
-                     {domain :domain config-dir :config-dir} options]
-                 (if (k/valid? (str config-dir domain "/authorization." domain ".uri") options)
-                   (request options)
-                   (do (authorize options)
-                       (h/run-hooks :before-challenge options)
-                       (accept-challenges options)
-                       (request options)))
-                 (h/run-hooks :after-request options))))))
-
+                     options (merge config-options cli-options)]
+                 (renew options))))))
