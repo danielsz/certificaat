@@ -3,6 +3,7 @@
 Certificaat is a general-purpose [[https://tools.ietf.org/html/draft-ietf-acme-acme-06][ACME]] client, fully compatible with the [[https://letsencrypt.org/][Let’s Encrypt]] CA.
 ** Motivation
 Certificaat’s aim is to retrieve a certificate for your domain, and then run it as a cron job and forget about it.
+
 /Note:/ [[https://certbot.eff.org/][certbot]] does everything for everybody. Certificaat is narrower in scope, focusing on usability and automated renewals.  
 ** Installation
 [[https://github.com/danielsz/certificaat/releases/latest][Download]] the latest release, extract the archive and drop the self-contained binary in your ~PATH~.
