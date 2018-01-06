@@ -6,7 +6,8 @@
             [certificaat.acme4j.session :as session])
   (:import [org.shredzone.acme4j Authorization]
            [org.shredzone.acme4j.challenge Http01Challenge Dns01Challenge]
-           org.shredzone.acme4j.Status))
+           org.shredzone.acme4j.Status
+           org.shredzone.acme4j.exception.AcmeProtocolException))
 
 (defn create [domain reg]
   (let [auth (.authorizeDomain reg domain)]
@@ -22,6 +23,8 @@
 (extend-type Authorization
   Certificaat
   (valid? [this]
-    (let [status (.getStatus this)]
+    (let [status (try
+                   (.getStatus this)
+                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
       (log/info "Authorization status:" status)
       (or (= Status/VALID status) (= Status/PENDING status))))) ; (.isBefore (.getExpires this) (Instant/now)))

@@ -13,7 +13,6 @@
             [clojure.spec.alpha :as s])
   (:import java.net.URI
            org.shredzone.acme4j.exception.AcmeUnauthorizedException
-           org.shredzone.acme4j.exception.AcmeServerException
            org.shredzone.acme4j.Status))
 
 (defn setup [{:keys [config-dir domain key-type key-size keypair-filename] :as options}]
@@ -55,10 +54,8 @@
                             (let [registration (registration/restore session registration-uri)]
                               (d/valid? registration)))
       ::d/authorization-uri (if-let [authorization-uri (c/load-uri frozen-resource)]
-                              (try
-                                (let [authorization (authorization/restore session authorization-uri)]
-                                  (d/valid? authorization))
-                                (catch AcmeServerException e (log/warn (.getMessage e)))))
+                              (let [authorization (authorization/restore session authorization-uri)]
+                                (d/valid? authorization)))
       ::d/certificate-uri (if-let [certificate-uri (c/load-uri frozen-resource)]
                            (let [certificate (certificate/restore session certificate-uri)]
                              (d/valid? certificate))))))
