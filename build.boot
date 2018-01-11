@@ -8,7 +8,7 @@
                  [org.danielsz/lang-utils "0.1.0-SNAPSHOT"]
                  [org.shredzone.acme4j/acme4j-client "0.13"]
                  [org.shredzone.acme4j/acme4j-utils "0.13"]
-                 [org.clojure/tools.logging "0.3.1"]
+                 [org.clojure/tools.logging "0.4.0"]
                  [ch.qos.logback/logback-classic "1.2.3"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.kohsuke/libpam4j "1.8"]
