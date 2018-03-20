@@ -69,7 +69,8 @@
       (challenge/accept challenge))))
 
 (defn pending? [frozen-resource options]
-  (let [authorization-uri (c/load-uri frozen-resource)
+  (let [session (session options)
+        authorization-uri (c/load-uri frozen-resource)
         authorization (authorization/restore session authorization-uri)]
     (= Status/PENDING (.getStatus authorization))))
 
