@@ -119,9 +119,10 @@
     (not (k/valid? (str config-dir "registration.uri") options)) (register options)
     (not (k/valid? (str config-dir domain "/authorization." domain ".uri") options)) (do (authorize options)
                                                                                          (h/run-hooks :before-challenge options))
-    (not (k/valid? (str config-dir domain "/certificate.uri") options)) (do (accept-challenges options)
-                                                                            (request options)
-                                                                            (h/run-hooks :after-request options))
+    (or (k/pending? (str config-dir domain "/authorization." domain ".uri") options)
+        (not (k/valid? (str config-dir domain "/certificate.uri") options))) (do (accept-challenges options)
+                                                                               (request options)
+                                                                               (h/run-hooks :after-request options))
     :else (exit 0 "Nothing left to do at this point in time.")))
 (defn renew [{domain :domain config-dir :config-dir :as options}]
   (if (k/valid? (str config-dir domain "/authorization." domain ".uri") options)

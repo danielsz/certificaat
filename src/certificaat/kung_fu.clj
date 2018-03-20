@@ -68,6 +68,11 @@
                 challenge (challenge/restore session uri)]]
       (challenge/accept challenge))))
 
+(defn pending? [frozen-resource options]
+  (let [authorization-uri (c/load-uri frozen-resource)
+        authorization (authorization/restore session authorization-uri)]
+    (= Status/PENDING (.getStatus authorization))))
+
 (defn get-certificate [{:keys [config-dir domain organisation san] :as options} reg]
   (let [path (str config-dir domain "/")
         csr (str path "request.csr")]
