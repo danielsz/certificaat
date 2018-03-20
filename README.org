@@ -90,7 +90,7 @@ this:
                           :pass "changeme",
                           :port 587,
                           :user "changeme"}},
-           :webroot {:enabled false, :path "/tmp"}}}
+           :webroot {:enabled false, :path "/var/www/"}}}
 #+END_SRC
 
 **** Run
