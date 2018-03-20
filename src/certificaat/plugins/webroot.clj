@@ -12,7 +12,7 @@
       (doseq [frozen-challenge frozen-challenges
               :let [uri (new URI (slurp frozen-challenge))
                     challenge (challenge/restore session uri)
-                    file (io/file (str path "/.well-known/acme-challenge/" (.getToken challenge)))]
+                    file (io/file (str path "/" domain "/.well-known/acme-challenge/" (.getToken challenge)))]
               :when (= (.getType challenge) "http-01")]
         (io/make-parents file)
         (spit file (.getAuthorization challenge))
