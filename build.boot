@@ -32,7 +32,7 @@
    (notify :visual true)
    (repl :server true)))
 
-(def +version+ "2.0.1")
+(def +version+ "2.0.2")
 (task-options!
  push {:repo-map {:url "https://clojars.org/repo/"}}
  pom {:project 'org.danielsz/certificaat
