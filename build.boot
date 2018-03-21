@@ -19,10 +19,14 @@
                  [org.immutant/web "2.1.9"]
                  [ring "1.6.1"]
                  [environ "1.1.0"]
-                 [boot-environ "1.1.0"]])
+                 [boot-environ "1.1.0"]
+                 [manenko/boot-zip "0.2.0-SNAPSHOT"]])
 
 (require '[environ.boot :refer [environ]]
-         '[adzerk.boot-jar2bin :refer [bin]])
+         '[adzerk.boot-jar2bin :refer [bin]]
+         '[manenko.boot-zip :refer [compress-into-zip]]
+         '[boot.core :as boot]
+         '[clojure.java.io :as io])
 
 (deftask dev
   "Run a restartable system in the Repl"
@@ -70,3 +74,29 @@
   []
   (comp
    (pom) (jar) (push)))
+
+(deftask filter-release
+  "Prints the fileset."
+  [m matching REGEX #{regex} "The set of regexes matching paths to include in release."]
+  (boot/with-pre-wrap fileset
+    (let [tmp (boot/tmp-dir!)
+          files (->> fileset
+                     output-files
+                     (by-re matching)
+                     (map (juxt tmp-path tmp-file)))]
+      (doseq [[path file] files
+              :let [out (io/file (str tmp "/release/" path))]]
+        (boot.util/info (str "path " path " file " file "\n"))
+        (io/make-parents out)
+        (io/copy file out))
+      (let [fileset' (boot/add-asset fileset tmp)]
+        (boot/commit! fileset')))))
+
+(deftask build-release
+  []
+  (set-env! :asset-paths #(conj % "bin"))
+  (comp
+   (filter-release :matching #{#"certificaat-"})
+   (compress-into-zip :input-dir "release" :archive "certificaat.zip")
+   (sift :include #{#"certificaat.zip"})
+   (target :dir #{"release"})))
