@@ -147,7 +147,9 @@
                           options (merge config-options cli-options)]
                       (loop [t 3]
                         (if (> t 0)
+                          (try
                             (run options)
+                            (catch AcmeUnauthorizedException e (println (.getMessage e))))
                             (exit 1 (str "Quitting for now")))
                         (recur (dec t)))) 
         "reset"     (let [options (validate ::domain/cli-options options)]
