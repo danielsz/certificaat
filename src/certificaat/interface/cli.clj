@@ -145,6 +145,7 @@
         "run"       (let [cli-options (validate ::domain/cli-options options)
                           config-options (validate ::domain/config (c/read-config cli-options))
                           options (merge config-options cli-options)]
+                      (when (> (:verbosity options) 0) (println options))
                       (loop [t 3]
                         (if (> t 0)
                           (try
