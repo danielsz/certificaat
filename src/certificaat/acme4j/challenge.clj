@@ -33,7 +33,7 @@
 
 (defn http-01 [challenge domain]
   (->> ["Please create a file in your web server's base directory."
-        (str  "It must be reachable at:" (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
+        (str  "It must be reachable at: " (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
         (str "File name: " (.getToken challenge))
         (str "Content: " (.getAuthorization challenge))
         "The file must not contain any leading or trailing whitespaces or line breaks!"
