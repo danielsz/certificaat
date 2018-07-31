@@ -1,6 +1,5 @@
 (ns certificaat.domain
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
             [clojure.java.io :as io])
   (:import [java.net InetAddress]
            [java.net URI]))
