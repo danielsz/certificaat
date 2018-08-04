@@ -1,7 +1,9 @@
 (ns certificaat.fsm
   (:require [golem.stack :refer [state-machine update-state target-state]]
+            [certificaat.utils :refer [exit error-msg]]
             [certificaat.kung-fu :as k]
             [certificaat.hooks :as h]
+            [clojure.core.async :refer [<!!]]
             [certificaat.plugins.webroot :as w])
   (:import clojure.lang.ExceptionInfo
            (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitExceededException)
@@ -25,8 +27,9 @@
               :let [resp (<!! c)]]
         (if (= Status/VALID resp)
           (println "Well done, challenge completed.")
-          (println "Sorry, challenge failed." resp)))
+          (exit 1 (str "Sorry, challenge failed." resp))))
       (catch AcmeServerException e (exit 1 (.getMessage e)))))
+
 (defn request [options]
   (let [reg (k/register options)]
     (try 
@@ -36,13 +39,14 @@
 
 
 (defn run [{config-dir :config-dir domain :domain :as options}]
-  (let [state-table {:find-certificate [{:valid-when [(k/valid? (str config-dir domain "/certificate.uri") options)]
+  (let [state-table {:find-certificate [{:valid-when [#(k/valid? (str config-dir domain "/certificate.uri") options)]
                                          :side-effect #(exit 0 "Nothing left to do at this point in time.")
                                          :next-state nil}
                                         {:valid-when []
                                          :side-effect #(do)
                                          :next-state :find-authorization}]
-                     :find-authorization [{:valid-when [#(k/pending? (str config-dir domain "/authorization." domain ".uri") options)]
+                     :find-authorization [{:valid-when [#(let [auth (str config-dir domain "/authorization." domain ".uri")]
+                                                           (and (k/valid? auth options) (k/pending? auth options)))]
                                            :side-effect #(accept-challenges options)
                                            :next-state :find-authorization}
                                           {:valid-when [#(k/valid? (str config-dir domain "/authorization." domain ".uri") options)]

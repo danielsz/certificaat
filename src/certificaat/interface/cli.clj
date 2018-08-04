@@ -1,8 +1,10 @@
 (ns certificaat.interface.cli
   (:require [certificaat.domain :as domain]
             [certificaat.fsm :as f]
+            [certificaat.kung-fu :as k]
+            [certificaat.utils :refer [exit error-msg]]
             [certificaat.util.configuration :as c]
-            [clojure.core.async :refer [<!!]]
+            [certificaat.util.tentoonstelling :as t]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
@@ -53,14 +55,6 @@
         ""
         ""]
        (str/join \newline)))
-
-(defn error-msg [errors]
-  (str "The following errors occurred while parsing your command:\n\n"
-       (str/join \newline errors)))
-
-(defn exit [status msg]
-  (println msg)
-  (System/exit status))
 
 (defn validate [spec options]
   (try
