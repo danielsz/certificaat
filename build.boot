@@ -20,7 +20,8 @@
                  [ring "1.6.1"]
                  [environ "1.1.0"]
                  [boot-environ "1.1.0"]
-                 [manenko/boot-zip "0.2.0-SNAPSHOT"]])
+                 [manenko/boot-zip "0.2.0-SNAPSHOT"]
+                 [org.danielsz/golem "0.0.1-SNAPSHOT"]])
 
 (require '[environ.boot :refer [environ]]
          '[adzerk.boot-jar2bin :refer [bin]]

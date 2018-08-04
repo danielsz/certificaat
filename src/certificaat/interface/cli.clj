@@ -1,10 +1,7 @@
 (ns certificaat.interface.cli
   (:require [certificaat.domain :as domain]
-            [certificaat.kung-fu :as k]
-            [certificaat.hooks :as h]
-            [certificaat.plugins.webroot :as w]
+            [certificaat.fsm :as f]
             [certificaat.util.configuration :as c]
-            [certificaat.util.tentoonstelling :as t]
             [clojure.core.async :refer [<!!]]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
@@ -88,51 +85,6 @@
       (s/valid? ::domain/cli-actions (first arguments)) {:action (first arguments) :options options}
       :else {:exit-message (usage summary)})))
 
-(defn register [options] (k/register options))
-(defn authorize [{config-dir :config-dir domain :domain :as options}]
-  (let [reg (k/register options)]
-    (doseq [[name auth challenges] (k/authorize options reg)
-            i (range (count challenges))
-            challenge challenges
-            :let [explanation (k/explain challenge name)]]
-      (println explanation)
-      (spit (str config-dir domain "/" name "." (.getType challenge) ".challenge.txt") explanation)
-      (spit (str config-dir domain "/challenge." name "." i ".uri") (.getLocation challenge))
-      (spit (str config-dir domain "/authorization." name ".uri") (.getLocation auth)))))
-(defn accept-challenges [options]
-  (try
-      (doseq [c (k/challenge options)
-              :let [resp (<!! c)]]
-        (if (= Status/VALID resp)
-          (println "Well done, challenge completed.")
-          (println "Sorry, challenge failed." resp)))
-      (catch AcmeServerException e (exit 1 (.getMessage e)))))
-(defn request [options]
-  (let [reg (k/register options)]
-    (try 
-      (k/request options reg) ; will throw AcmeUnauthorizedException if the authorizations of some or all involved domains have expired
-      (catch AcmeRateLimitExceededException e (exit 1 (.getMessage e)))
-      (catch AcmeUnauthorizedException e (exit 1 (.getMessage e)))) ))
-
-(defn run [{config-dir :config-dir domain :domain :as options}]
-  (cond
-    (not (k/valid? (str config-dir "registration.uri") options)) (register options)
-    (not (k/valid? (str config-dir domain "/authorization." domain ".uri") options)) (do (authorize options)
-                                                                                         (h/run-hooks :before-challenge options))
-    (or (k/pending? (str config-dir domain "/authorization." domain ".uri") options)
-        (not (k/valid? (str config-dir domain "/certificate.uri") options))) (do (accept-challenges options)
-                                                                               (request options)
-                                                                               (h/run-hooks :after-request options))
-    :else (exit 0 "Nothing left to do at this point in time.")))
-(defn renew [{domain :domain config-dir :config-dir :as options}]
-  (if (k/valid? (str config-dir domain "/authorization." domain ".uri") options)
-    (request options)
-    (do (authorize options)
-        (h/run-hooks :before-challenge options)
-        (accept-challenges options)
-        (request options)))
-  (h/run-hooks :after-request options))
-
 (defn certificaat [args]
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
@@ -141,18 +93,14 @@
         "init"      (let [cli-options (validate ::domain/cli-options options)
                           config-options (validate ::domain/config c/defaults)
                           options (merge config-options cli-options)]
-                      (k/setup options))
+                      (f/setup options))
         "run"       (let [cli-options (validate ::domain/cli-options options)
                           config-options (validate ::domain/config (c/read-config cli-options))
                           options (merge config-options cli-options)]
                       (when (> (:verbosity options) 0) (println options))
-                      (loop [t 3]
-                        (if (> t 0)
-                          (try
-                            (run options)
-                            (catch AcmeUnauthorizedException e (println (.getMessage e))))
-                            (exit 1 (str "Quitting for now")))
-                        (recur (dec t)))) 
+                      (try
+                        (f/run options)
+                        (catch AcmeUnauthorizedException e (println (.getMessage e))))) 
         "reset"     (let [options (validate ::domain/cli-options options)]
                       (try (t/confirm-dialog "Are you sure?" (str "This will delete everything under " (:config-dir options) (:domain options)))
                            (c/delete-domain-config-dir! options)
@@ -167,4 +115,4 @@
         "cron" (let [cli-options (validate ::domain/cli-options options)
                      config-options (validate ::domain/config (c/read-config options))
                      options (merge config-options cli-options)]
-                 (renew options))))))
+                 (f/renew options))))))
