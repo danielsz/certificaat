@@ -21,13 +21,14 @@
       (spit (str config-dir domain "/" name "." (.getType challenge) ".challenge.txt") explanation)
       (spit (str config-dir domain "/challenge." name "." i ".uri") (.getLocation challenge))
       (spit (str config-dir domain "/authorization." name ".uri") (.getLocation auth)))))
+
 (defn accept-challenges [options]
   (try
       (doseq [c (k/challenge options)
               :let [resp (<!! c)]]
         (if (= Status/VALID resp)
           (println "Well done, challenge completed.")
-          (exit 1 (str "Sorry, challenge failed." resp))))
+          (println "Sorry, challenge failed." resp)))
       (catch AcmeServerException e (exit 1 (.getMessage e)))))
 
 (defn request [options]

@@ -5,12 +5,15 @@
             [certificaat.acme4j.challenge :as challenge]
             [certificaat.acme4j.registration :as registration]
             [certificaat.acme4j.session :as session]
+            [certificaat.utils :refer [exit]]
             [certificaat.util.configuration :as c]
             [certificaat.domain :as d]
+            [clj-http.client :as client]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [clojure.spec.alpha :as s])
+            [clojure.spec.alpha :as s]
+            [clj-http.client :as client])
   (:import java.net.URI
            org.shredzone.acme4j.exception.AcmeUnauthorizedException
            org.shredzone.acme4j.Status))
@@ -62,10 +65,15 @@
 
 (defn challenge [{domain :domain config-dir :config-dir :as options}]
   (let [session (session options) 
-        frozen-challenges (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file (str config-dir domain))))]
-    (for [frozen-challenge frozen-challenges
-          :let [uri (new URI (slurp frozen-challenge))
-                challenge (challenge/restore session uri)]]
+        frozen-challenges (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file (str config-dir domain))))
+        challenges (for [frozen-challenge frozen-challenges
+                         :let [uri (new URI (slurp frozen-challenge))]]
+                     (challenge/restore session uri))]
+    (doseq [challenge challenges]
+      (when (= "http-01" (.getType challenge))
+        (try (client/head (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
+             (catch Exception e (exit 1 (str "Please make sure you can respond to the challenges.\nError message: " (.getMessage e))))))) ;precheck
+    (for [challenge challenges]
       (challenge/accept challenge))))
 
 (defn pending? [frozen-resource options]
