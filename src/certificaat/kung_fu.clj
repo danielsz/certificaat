@@ -21,9 +21,8 @@
            org.shredzone.acme4j.exception.AcmeUnauthorizedException
            org.shredzone.acme4j.Status))
 
-(defn session [{:keys [config-dir keypair-filename acme-uri]}]
-  (let [keypair (keypair/read config-dir keypair-filename)]
-    (session/create acme-uri)))
+(defn session [{:keys [acme-uri]}]
+  (session/create acme-uri))
 
 (defn valid? [frozen-resource options]
   (let [session (session options)]
