@@ -59,4 +59,4 @@
                 (derive :organisation ::domain)
                 (derive :challenges ::domain)
                 (derive :hooks ::domain)
-                (derive :plugins ::account)))
+                (derive :plugins ::domain)))

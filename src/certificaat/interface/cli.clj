@@ -12,7 +12,7 @@
             [puget.printer :as puget]
             [clojure.java.io :as io])
   (:import clojure.lang.ExceptionInfo
-           (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitExceededException)
+           (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitedException)
            org.shredzone.acme4j.Status))
 
 (def cli-options

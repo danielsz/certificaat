@@ -18,7 +18,8 @@
   (.deactivate auth))
 
 (defn restore [session uri]
-  (Authorization/bind session uri))
+  ;(Authorization/bind session uri)
+  )
 
 (extend-type Authorization
   Certificaat
@@ -27,4 +28,4 @@
                    (.getStatus this)
                    (catch AcmeProtocolException e (log/warn (.getMessage e))))]
       (log/info "Authorization status:" status)
-      (or (= Status/VALID status) (= Status/PENDING status))))) ; (.isBefore (.getExpires this) (Instant/now)))
+      (= Status/VALID status)))) ; (.isBefore (.getExpires this) (Instant/now)))

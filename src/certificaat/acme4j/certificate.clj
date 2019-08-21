@@ -38,13 +38,15 @@
 (defn persist [path cert]
   (let [[cert chain] (download cert)
         fw (FileWriter. path)]
-    (CertificateUtils/writeX509CertificateChain fw cert chain)))
+    ;(CertificateUtils/writeX509CertificateChain fw cert chain)
+    ))
 
 (defn delete [cert]
   (.revoke cert))
 
 (defn restore [session uri]
-  (Certificate/bind session uri))
+  ;(Certificate/bind session uri)
+  )
 
 (defn revoke [cert]
   (.revoke cert))
@@ -55,7 +57,7 @@
   (= (.getModulus (.getPublicKey cert)) (.getModulus (.getPrivate key))))
 
 (defn info [cert-file key-file]
-  (let [cert (CertificateUtils/readX509Certificate (io/input-stream cert-file))
+  (let [cert (CertificateUtils/readCSR (io/input-stream cert-file))
         issuer (.getIssuerX500Principal cert)
         subject (.getSubjectX500Principal cert)
         info {:issuer (.getName issuer)

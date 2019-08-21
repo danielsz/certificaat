@@ -6,7 +6,7 @@
             [clojure.core.async :refer [<!!]]
             [certificaat.plugins.webroot :as w])
   (:import clojure.lang.ExceptionInfo
-           (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitExceededException)
+           (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitedException)
            org.shredzone.acme4j.Status))
 
 (def setup k/setup)
@@ -35,7 +35,7 @@
   (let [reg (k/register options)]
     (try 
       (k/request options reg) ; will throw AcmeUnauthorizedException if the authorizations of some or all involved domains have expired
-      (catch AcmeRateLimitExceededException e (exit 1 (.getMessage e)))
+      (catch AcmeRateLimitedException e (exit 1 (.getMessage e)))
       (catch AcmeUnauthorizedException e (exit 1 (.getMessage e)))) ))
 
 
@@ -60,13 +60,13 @@
                                            :next-state :find-authorization}
                                           {:valid-when []
                                            :side-effect #(do)
-                                            :next-state :find-registration}]
-                     :find-registration [{:valid-when [#(k/valid? (str config-dir "registration.uri") options)]
-                                          :side-effect #(do)
-                                          :next-state :find-authorization}
-                                          {:valid-when []
-                                           :side-effect #(register options)
-                                           :next-state :find-registration}]}
+                                            :next-state :find-account}]
+                     :find-account [{:valid-when [#(k/valid? (str config-dir "account.url") options)]
+                                     :side-effect #(do)
+                                     :next-state :find-authorization}
+                                    {:valid-when []
+                                     :side-effect #(register options)
+                                     :next-state :find-account}]}
         sm (state-machine state-table :find-certificate)]
     (target-state sm)))
 

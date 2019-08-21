@@ -1,26 +1,24 @@
 (ns certificaat.acme4j.account
+  (:refer-clojure :exclude [read])
   (:require [environ.core :refer [env]]
-            [clojure.tools.logging :as log])
-  (:import [org.shredzone.acme4j.util KeyPairUtils]
-           [java.security Security]
-           [org.bouncycastle.jce.provider BouncyCastleProvider]
-           [java.io FileWriter FileReader]))
+            [clojure.tools.logging :as log]
+            [certificaat.acme4j.keypair :as keypair])
+  (:import
+   [org.shredzone.acme4j AccountBuilder]))
 
-(Security/addProvider (new org.bouncycastle.jce.provider.BouncyCastleProvider))
+(defn create [session keypair contact & {:keys [with-login] :or {with-login false}}]
+  (let [account-builder (doto (AccountBuilder.)
+                          (.addContact contact)
+                          (.agreeToTermsOfService)
+                          (.useKeyPair keypair))]
+    (if with-login
+      (.createLogin account-builder session)
+      (.create account-builder session))))
 
-(defn keypair [key-type key-size]
-  (let [keypair (case key-type
-                  :rsa (KeyPairUtils/createKeyPair key-size)
-                  :ec (KeyPairUtils/createECKeyPair "secp256r1"))]
-    keypair))
+(defn read [session keypair]
+  (let [account-builder (doto (AccountBuilder.)
+                          (.onlyExisting)
+                          (.useKeyPair keypair))]
+    (.create account-builder session)))
 
-(defn persist [keypair path]
-  (let [fw (FileWriter. path)]
-    (KeyPairUtils/writeKeyPair keypair fw)))
-
-(defn restore
-  ([path]
-   (let [fr (FileReader. path)]
-     (KeyPairUtils/readKeyPair fr)))
-  ([config-dir keypair-filename]
-   (restore (str config-dir keypair-filename))))
+(defn restore [x y])

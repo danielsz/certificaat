@@ -1,12 +1,12 @@
 (ns certificaat.util.configuration
   (:require [clojure.java.io :as io]
-            [certificaat.acme4j.account :as account]
+            [certificaat.acme4j.keypair :as keypair]
             [certificaat.util.download :as d]
             [certificaat.domain :as domain]
             [environ.core :refer [env]]
             [puget.printer :as puget]
             [clojure.string :as str])
-  (:import java.net.URI))
+  (:import java.net.URL))
 
 (def defaults {:config-dir (str (or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/")) "certificaat/")
                :keypair-filename "account.key"
@@ -37,7 +37,7 @@
   (let [file (io/file path)]
     (when (not (.exists file))
       (io/make-parents file)
-      (account/persist keypair path))))
+      (keypair/write keypair path))))
 
 (defn write-config [file content]
   (when (not (.exists file))
@@ -73,7 +73,7 @@
     (with-open [w (io/output-stream (str config-dir filename))]
       (.write w agreement))))
 
-(defn load-uri [path]
-  (let [uri-resource (io/file path)]
-    (when (.exists uri-resource)
-      (new URI (slurp uri-resource)))))
+(defn load-url [path]
+  (let [url-resource (io/file path)]
+    (when (.exists url-resource)
+      (URL. (slurp url-resource)))))

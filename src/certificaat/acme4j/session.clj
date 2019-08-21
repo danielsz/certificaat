@@ -5,8 +5,7 @@
    [environ.core :refer [env]])
   (:import [org.shredzone.acme4j Session]))
 
-(defn create [keypair acme-uri]
-  (let [session (Session. acme-uri keypair)]
-    session))
+(defn create [acme-uri]
+  (Session. acme-uri))
 
 

@@ -1,0 +1,77 @@
+{:pom
+ {:group-id "certificaat",
+  :artifact-id "certificaat",
+  :version "2.0.3",
+  :name "certificaat"},
+ :packaging
+ {:uberjar
+  {:enabled true,
+   :main-class "main.core",
+   :remote-repository
+   {:id "ssh-repository",
+    :url "scpexe://user@domain:/home/.m2/repository"},
+   :excludes
+   {:artifacts ["org.clojure:google-closure-library"],
+    :filters
+    ["META-INF/*.MF"
+     "META-INF/*.SF"
+     "META-INF/*.DSA"
+     "META-INF/*.RSA"]}},
+  :jar
+  {:enabled false,
+   :remote-repository
+   {:id "clojars", :url "https://clojars.org/repo"}}},
+ :cljs
+ {:enabled false,
+  :compiler-opts
+  {:infer-externs true,
+   :output-dir "resources/js/compiled",
+   :optimizations :advanced,
+   :parallel-build true,
+   :verbose true,
+   :aot-cache true,
+   :output-to "resources/js/main.js",
+   :output-wrapper true,
+   :foreign-libs [],
+   :main "main.core"},
+  :tools-deps-alias :cljs},
+ :testing {:enabled true, :tools-deps-alias :test},
+ :scm {:enabled false},
+ :interactive
+ {:enabled true,
+  :tools-deps-alias :repl,
+  :system my.namespace/base,
+  :repl-port 4009,
+  :cljs
+  {:enabled false,
+   :with-repl true,
+   :compiler-opts
+   {:infer-externs true,
+    :output-dir "target/classes/js/compiled",
+    :optimizations :none,
+    :parallel-build true,
+    :verbose true,
+    :aot-cache true,
+    :output-to "target/classes/js/main.js",
+    :asset-path "/js/compiled",
+    :output-wrapper true,
+    :watch "src/cljs",
+    :source-map true,
+    :foreign-libs [],
+    :main "main.core"},
+   :tools-deps-alias :cljs},
+  :figwheel
+  {:enabled false,
+   :main {:watch-dirs ["src/cljs"], :open-url false},
+   :build
+   {:main "main.core",
+    :foreign-libs [],
+    :output-dir "target/classes/js/compiled",
+    :output-to "target/classes/js/main.js",
+    :asset-path "/js/compiled",
+    :output-wrapper true,
+    :aot-cache true,
+    :infer-externs true},
+   :tools-deps-alias :figwheel}},
+ :graalvm {:enabled false, :with-https false},
+ :profiles {:enabled false}}
