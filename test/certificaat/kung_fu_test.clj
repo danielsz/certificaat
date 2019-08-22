@@ -37,7 +37,8 @@
     (is (= org.shredzone.acme4j.Session (type session)))
     (is (= org.shredzone.acme4j.Metadata (type metadata)))
     (is (= java.net.URI (type (.getTermsOfService metadata))))
-    (is (= java.net.URL (type (.getWebsite metadata))))))
+    (is (= java.net.URL (type (.getWebsite metadata))))
+    (is (= false (.isExternalAccountRequired metadata)))))
 
 (deftest session
   (let [session (session/create (:acme-uri options))
@@ -70,3 +71,46 @@
         login (account/create session keypair contact :with-login true)]
     (is (= org.shredzone.acme4j.Login (type login)))
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
+
+(deftest login
+  (let [session (kung-fu/session options)
+        keypair (keypair/read (:config-dir options) (:keypair-filename options))
+        account (account/read session keypair)
+        account-location (.getLocation account)
+        login (.login session account-location keypair)]
+    (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
+
+(deftest order
+  (let [session (kung-fu/session options)
+        keypair (keypair/read (:config-dir options) (:keypair-filename options))
+        account (account/read session keypair)
+        order-builder (doto (.newOrder account)
+                        (.domains ["example.org" "www.example.org" "m.example.org"]))]
+    (is (= org.shredzone.acme4j.OrderBuilder (type order-builder)))
+    (is (= org.shredzone.acme4j.Order (type (.create order-builder))))))
+
+(deftest resource-binding-order
+  (let [session (kung-fu/session options)
+        keypair (keypair/read (:config-dir options) (:keypair-filename options))
+        account (account/read session keypair)
+        account-location (.getLocation account)
+        login (.login session account-location keypair)
+        order-builder (doto (.newOrder account)
+                        (.domains ["example.org" "www.example.org" "m.example.org"]))
+        order (.create order-builder)
+        order-url (.getLocation order)]
+    (is (= (type order) (type (.bindOrder login order-url)))) ; same object
+    (is (not= order (.bindOrder login order-url))) ; different instance
+    (is (= (.getLocation order) (.getLocation (.bindOrder login order-url)))) ; same url
+    ))
+
+(deftest authorization
+  (let  [session (kung-fu/session options)
+         keypair (keypair/read (:config-dir options) (:keypair-filename options))
+         account (account/read session keypair)
+         order-builder (doto (.newOrder account)
+                         (.domains ["example.org" "www.example.org" "m.example.org"]))
+         order (.create order-builder)]
+    (doseq [auth (.getAuthorizations order)]
+      (is (= org.shredzone.acme4j.Authorization (type auth)))
+      (is (= org.shredzone.acme4j.Status/PENDING (.getStatus auth))))))
