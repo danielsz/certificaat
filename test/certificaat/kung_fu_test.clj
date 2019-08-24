@@ -1,9 +1,10 @@
 (ns certificaat.kung-fu-test
   (:require [certificaat.kung-fu :as kung-fu]
+            [certificaat.util.configuration :as config]
             [certificaat.acme4j.account :as account]
             [certificaat.acme4j.session :as session]
             [certificaat.acme4j.keypair :as keypair]
-            [clojure.test :refer [deftest is]]))
+            [clojure.test :refer [deftest is use-fixtures]]))
 
 (def options {:config-dir (str (or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/")) "certificaat/")
                :keypair-filename "account.key"
@@ -29,6 +30,13 @@
                                         :pass "changeme"
                                         :port 587}
                                  :sendmail false}}})
+
+(defn setup [f]
+  (config/setup options)
+  (f)
+  (config/delete-domain-config-dir! options))
+
+(use-fixtures :once setup)
 
 
 (deftest session-kung-fu
@@ -56,7 +64,6 @@
     (is (= org.shredzone.acme4j.Account (type account)))
     (is (= java.net.URL (type (.getLocation account))))))
 
-
 (deftest account-location
   (let [session (kung-fu/session options)
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
@@ -78,6 +85,16 @@
         account (account/read session keypair)
         account-location (.getLocation account)
         login (.login session account-location keypair)]
+    (is (= org.shredzone.acme4j.Login (type login)))
+    (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
+
+(deftest login-constructor
+  (let [session (kung-fu/session options)
+        keypair (keypair/read (:config-dir options) (:keypair-filename options))
+        account (account/read session keypair)
+        account-location (.getLocation account)
+        login (org.shredzone.acme4j.Login. account-location keypair session)]
+    (is (= org.shredzone.acme4j.Login (type login)))
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 
 (deftest order
@@ -114,3 +131,45 @@
     (doseq [auth (.getAuthorizations order)]
       (is (= org.shredzone.acme4j.Authorization (type auth)))
       (is (= org.shredzone.acme4j.Status/PENDING (.getStatus auth))))))
+
+(deftest resource-binding-authorization
+  (let  [session (kung-fu/session options)
+         keypair (keypair/read (:config-dir options) (:keypair-filename options))
+         account (account/read session keypair)
+         account-location (.getLocation account)
+         login (.login session account-location keypair)
+         order-builder (doto (.newOrder account)
+                         (.domains ["example.org" "www.example.org" "m.example.org"]))
+         order (.create order-builder)]
+    (doseq [auth (.getAuthorizations order)
+            :let [auth-url (.getLocation auth)]]
+      (is (= org.shredzone.acme4j.Authorization (type (.bindAuthorization login auth-url))))
+      (is (= (.getLocation auth) (.getLocation (.bindAuthorization login auth-url)))))))
+
+(deftest challenges
+  (let  [session (kung-fu/session options)
+         keypair (keypair/read (:config-dir options) (:keypair-filename options))
+         account (account/read session keypair)
+         order-builder (doto (.newOrder account)
+                         (.domains ["example.org" "www.example.org" "m.example.org"]))
+         order (.create order-builder)]
+    (doseq [auth (.getAuthorizations order)
+            :let [challenges (.getChallenges foo)]]
+      (is (some #{org.shredzone.acme4j.challenge.Http01Challenge} (map type challenges)))
+      (is (some #{org.shredzone.acme4j.challenge.Dns01Challenge} (map type challenges)))
+      (is (some #{org.shredzone.acme4j.challenge.TlsAlpn01Challenge} (map type challenges))))))
+
+(deftest challenge-http-01
+  (let  [session (kung-fu/session options)
+         keypair (keypair/read (:config-dir options) (:keypair-filename options))
+         account (account/read session keypair)
+         order-builder (doto (.newOrder account)
+                         (.domains ["example.org" "www.example.org" "m.example.org"]))
+         order (.create order-builder)]
+    (doseq [auth (.getAuthorizations order)
+            :let [challenge (.findChallenge auth org.shredzone.acme4j.challenge.Http01Challenge/TYPE)
+                  domain (.getDomain (.getIdentifier auth))]]
+      (is (some? (.getAuthorization challenge)))
+      (is (some? (.getToken challenge)))
+      (is (some? domain))
+      (is (java.net.URL. (str "http://" domain "/.well-known/acme-challenge/" (.getToken challenge)))))))

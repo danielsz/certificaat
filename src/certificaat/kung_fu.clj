@@ -37,15 +37,6 @@
                            (let [certificate (certificate/restore session certificate-uri)]
                              (d/valid? certificate))))))
 
-(defn setup [{:keys [config-dir domain key-type key-size keypair-filename] :as options}]
-  (let [account-keypair (keypair/create key-type key-size)
-        domain-keypair (keypair/create key-type key-size)
-        account-path (str config-dir keypair-filename) 
-        domain-path (str config-dir domain "/domain.key")]
-    (c/add-keypair account-path account-keypair)
-    (c/add-keypair domain-path domain-keypair)
-    (c/add-config options)))
-
 
 (defn login [session account-uri keypair]
   (.login session account-uri keypair))

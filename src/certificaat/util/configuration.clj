@@ -77,3 +77,12 @@
   (let [url-resource (io/file path)]
     (when (.exists url-resource)
       (URL. (slurp url-resource)))))
+
+(defn setup [{:keys [config-dir domain key-type key-size keypair-filename] :as options}]
+  (let [account-keypair (keypair/create key-type key-size)
+        domain-keypair (keypair/create key-type key-size)
+        account-path (str config-dir keypair-filename) 
+        domain-path (str config-dir domain "/domain.key")]
+    (add-keypair account-path account-keypair)
+    (add-keypair domain-path domain-keypair)
+    (add-config options)))

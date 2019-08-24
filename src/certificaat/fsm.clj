@@ -2,6 +2,7 @@
   (:require [golem.stack :refer [state-machine update-state target-state]]
             [certificaat.utils :refer [exit error-msg]]
             [certificaat.kung-fu :as k]
+            [certificaat.util.configuration :as config]
             [certificaat.hooks :as h]
             [clojure.core.async :refer [<!!]]
             [certificaat.plugins.webroot :as w])
@@ -9,7 +10,7 @@
            (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitedException)
            org.shredzone.acme4j.Status))
 
-(def setup k/setup)
+(def setup config/setup)
 (defn register [options] (k/register options))
 (defn authorize [{config-dir :config-dir domain :domain :as options}]
   (let [reg (k/register options)]
