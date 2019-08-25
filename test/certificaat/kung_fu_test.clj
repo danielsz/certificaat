@@ -21,7 +21,8 @@
                :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
                :plugins {:webroot {:enabled false
                                    :path "/tmp"}
-                         :httpd {:enabled true}
+                         :httpd {:enabled true
+                                 :port 3010}
                          :diffie-hellman {:enabled false
                                           :modulus 2048
                                           :filename "dhparam.pem"
@@ -202,3 +203,22 @@
                     resp (client/get (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))]]
         (is (= (.getAuthorization challenge) (:body resp)))
         (server/stop-server server)))))
+
+(deftest process-challenge-http-01-again
+  (testing "sudo socat tcp-listen:80,reuseaddr,fork tcp:localhost:3010"
+    (let  [session (kung-fu/session options)
+           keypair (keypair/read (:config-dir options) (:keypair-filename options))
+           account (account/read session keypair)
+           domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
+           order-builder (doto (.newOrder account)
+                           (.domains domains))
+           order (.create order-builder)
+           authorizations (.getAuthorizations order)
+           domains+challenges (for [authorization authorizations]
+                               [(.getDomain (.getIdentifier authorization))
+                                (.findChallenge authorization org.shredzone.acme4j.challenge.Http01Challenge/TYPE)])
+           server (server/listen-all (map last domains+challenges) options)]
+      (doseq [[domain challenge] domains+challenges
+              :let [resp (client/get (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))]]
+        (is (= (.getAuthorization challenge) (:body resp))))
+      (server/stop-server server))))

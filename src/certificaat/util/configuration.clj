@@ -21,7 +21,8 @@
                :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
                :plugins {:webroot {:enabled false
                                    :path "/tmp"}
-                         :httpd {:enabled false}
+                         :httpd {:enabled false
+                                 :port 3010}
                          :diffie-hellman {:enabled false
                                           :modulus 2048
                                           :filename "dhparam.pem"
