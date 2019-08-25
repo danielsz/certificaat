@@ -4,6 +4,8 @@
             [certificaat.acme4j.account :as account]
             [certificaat.acme4j.session :as session]
             [certificaat.acme4j.keypair :as keypair]
+            [certificaat.plugins.server :as server]
+            [clj-http.client :as client]
             [clojure.test :refer [deftest is use-fixtures]]))
 
 (def options {:config-dir (str (or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/")) "certificaat/")
@@ -11,15 +13,15 @@
                :key-type :rsa
                :key-size 2048
                :acme-uri "acme://letsencrypt.org/staging" ; in production, use acme://letsencrypt.org
-               :domain "change.me"
-               :san #{}
+               :domain "lvh.me"
+               :san #{"www.lvh.me" "m.lvh.me"}
                :organisation "ChangeMe corporation"
                :contact "mailto:admin@change.me"
                :challenges #{"http-01"}
                :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
                :plugins {:webroot {:enabled false
                                    :path "/tmp"}
-                         :httpd {:enabled false}
+                         :httpd {:enabled true}
                          :diffie-hellman {:enabled false
                                           :modulus 2048
                                           :filename "dhparam.pem"
@@ -37,7 +39,6 @@
   (config/delete-domain-config-dir! options))
 
 (use-fixtures :once setup)
-
 
 (deftest session-kung-fu
   (let [session (kung-fu/session options)
@@ -101,8 +102,11 @@
   (let [session (kung-fu/session options)
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
+        domains (if (:san options)
+                 (conj (:san options) (:domain options))
+                 [(:domain options)])
         order-builder (doto (.newOrder account)
-                        (.domains ["example.org" "www.example.org" "m.example.org"]))]
+                        (.domains domains))]
     (is (= org.shredzone.acme4j.OrderBuilder (type order-builder)))
     (is (= org.shredzone.acme4j.Order (type (.create order-builder))))))
 
@@ -112,8 +116,11 @@
         account (account/read session keypair)
         account-location (.getLocation account)
         login (.login session account-location keypair)
+        domains (if (:san options)
+                  (conj (:san options) (:domain options))
+                  [(:domain options)])
         order-builder (doto (.newOrder account)
-                        (.domains ["example.org" "www.example.org" "m.example.org"]))
+                        (.domains domains))
         order (.create order-builder)
         order-url (.getLocation order)]
     (is (= (type order) (type (.bindOrder login order-url)))) ; same object
@@ -125,8 +132,9 @@
   (let  [session (kung-fu/session options)
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          account (account/read session keypair)
+         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
          order-builder (doto (.newOrder account)
-                         (.domains ["example.org" "www.example.org" "m.example.org"]))
+                         (.domains domains))
          order (.create order-builder)]
     (doseq [auth (.getAuthorizations order)]
       (is (= org.shredzone.acme4j.Authorization (type auth)))
@@ -138,8 +146,9 @@
          account (account/read session keypair)
          account-location (.getLocation account)
          login (.login session account-location keypair)
+         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
          order-builder (doto (.newOrder account)
-                         (.domains ["example.org" "www.example.org" "m.example.org"]))
+                         (.domains domains))
          order (.create order-builder)]
     (doseq [auth (.getAuthorizations order)
             :let [auth-url (.getLocation auth)]]
@@ -150,11 +159,12 @@
   (let  [session (kung-fu/session options)
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          account (account/read session keypair)
+         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
          order-builder (doto (.newOrder account)
-                         (.domains ["example.org" "www.example.org" "m.example.org"]))
+                         (.domains domains))
          order (.create order-builder)]
     (doseq [auth (.getAuthorizations order)
-            :let [challenges (.getChallenges foo)]]
+            :let [challenges (.getChallenges auth)]]
       (is (some #{org.shredzone.acme4j.challenge.Http01Challenge} (map type challenges)))
       (is (some #{org.shredzone.acme4j.challenge.Dns01Challenge} (map type challenges)))
       (is (some #{org.shredzone.acme4j.challenge.TlsAlpn01Challenge} (map type challenges))))))
@@ -163,13 +173,34 @@
   (let  [session (kung-fu/session options)
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          account (account/read session keypair)
+         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
          order-builder (doto (.newOrder account)
-                         (.domains ["example.org" "www.example.org" "m.example.org"]))
+                         (.domains domains))
          order (.create order-builder)]
     (doseq [auth (.getAuthorizations order)
             :let [challenge (.findChallenge auth org.shredzone.acme4j.challenge.Http01Challenge/TYPE)
-                  domain (.getDomain (.getIdentifier auth))]]
+                  domain (.getDomain (.getIdentifier auth))
+                  resp (try (client/head (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
+                            (catch Exception e e))]]
       (is (some? (.getAuthorization challenge)))
       (is (some? (.getToken challenge)))
       (is (some? domain))
-      (is (java.net.URL. (str "http://" domain "/.well-known/acme-challenge/" (.getToken challenge)))))))
+      (is (java.net.URL. (str "http://" domain "/.well-known/acme-challenge/" (.getToken challenge))))
+      (is (isa? (type resp) Exception)))))
+
+
+(deftest process-challenge-http-01
+  (let  [session (kung-fu/session options)
+         keypair (keypair/read (:config-dir options) (:keypair-filename options))
+         account (account/read session keypair)
+         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
+         order-builder (doto (.newOrder account)
+                         (.domains domains))
+         order (.create order-builder)]
+    (doseq [auth (.getAuthorizations order)
+            :let [challenge (.findChallenge auth org.shredzone.acme4j.challenge.Http01Challenge/TYPE)
+                  domain (.getDomain (.getIdentifier auth))
+                  server (server/listen challenge options)
+                  resp (client/get (str "http://" domain  ":3010/.well-known/acme-challenge/" (.getToken challenge)))]]
+      (is (= (.getAuthorization challenge) (:body resp)))
+      (server/stop-server server))))
