@@ -6,7 +6,7 @@
             [certificaat.acme4j.keypair :as keypair]
             [certificaat.plugins.server :as server]
             [clj-http.client :as client]
-            [clojure.test :refer [deftest is use-fixtures]]))
+            [clojure.test :refer [deftest is use-fixtures testing]]))
 
 (def options {:config-dir (str (or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/")) "certificaat/")
                :keypair-filename "account.key"
@@ -179,28 +179,26 @@
          order (.create order-builder)]
     (doseq [auth (.getAuthorizations order)
             :let [challenge (.findChallenge auth org.shredzone.acme4j.challenge.Http01Challenge/TYPE)
-                  domain (.getDomain (.getIdentifier auth))
-                  resp (try (client/head (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
-                            (catch Exception e e))]]
+                  domain (.getDomain (.getIdentifier auth))]]
       (is (some? (.getAuthorization challenge)))
       (is (some? (.getToken challenge)))
       (is (some? domain))
-      (is (java.net.URL. (str "http://" domain "/.well-known/acme-challenge/" (.getToken challenge))))
-      (is (isa? (type resp) Exception)))))
+      (is (java.net.URL. (str "http://" domain "/.well-known/acme-challenge/" (.getToken challenge)))))))
 
 
 (deftest process-challenge-http-01
-  (let  [session (kung-fu/session options)
-         keypair (keypair/read (:config-dir options) (:keypair-filename options))
-         account (account/read session keypair)
-         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
-         order-builder (doto (.newOrder account)
-                         (.domains domains))
-         order (.create order-builder)]
-    (doseq [auth (.getAuthorizations order)
-            :let [challenge (.findChallenge auth org.shredzone.acme4j.challenge.Http01Challenge/TYPE)
-                  domain (.getDomain (.getIdentifier auth))
-                  server (server/listen challenge options)
-                  resp (client/get (str "http://" domain  ":3010/.well-known/acme-challenge/" (.getToken challenge)))]]
-      (is (= (.getAuthorization challenge) (:body resp)))
-      (server/stop-server server))))
+  (testing "sudo socat tcp-listen:80,reuseaddr,fork tcp:localhost:3010"
+    (let  [session (kung-fu/session options)
+           keypair (keypair/read (:config-dir options) (:keypair-filename options))
+           account (account/read session keypair)
+           domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
+           order-builder (doto (.newOrder account)
+                           (.domains domains))
+           order (.create order-builder)]
+      (doseq [auth (.getAuthorizations order)
+              :let [challenge (.findChallenge auth org.shredzone.acme4j.challenge.Http01Challenge/TYPE)
+                    domain (.getDomain (.getIdentifier auth))
+                    server (server/listen challenge options)
+                    resp (client/get (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))]]
+        (is (= (.getAuthorization challenge) (:body resp)))
+        (server/stop-server server)))))
