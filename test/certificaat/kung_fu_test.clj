@@ -4,6 +4,9 @@
             [certificaat.acme4j.account :as account]
             [certificaat.acme4j.session :as session]
             [certificaat.acme4j.keypair :as keypair]
+            [certificaat.acme4j.challenge :as challenge]
+            [certificaat.acme4j.authorization]
+            [certificaat.domain :as d]
             [certificaat.plugins.server :as server]
             [clj-http.client :as client]
             [clojure.test :refer [deftest is use-fixtures testing]]))
@@ -13,8 +16,7 @@
                :key-type :rsa
                :key-size 2048
                :acme-uri "acme://letsencrypt.org/staging" ; in production, use acme://letsencrypt.org
-               :domain "lvh.me"
-               :san #{"www.lvh.me" "m.lvh.me"}
+               :domain "magic-127-0-0-1.nip.io"
                :organisation "ChangeMe corporation"
                :contact "mailto:admin@change.me"
                :challenges #{"http-01"}
@@ -195,16 +197,19 @@
            domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
            order-builder (doto (.newOrder account)
                            (.domains domains))
-           order (.create order-builder)]
-      (doseq [auth (.getAuthorizations order)
-              :let [challenge (.findChallenge auth org.shredzone.acme4j.challenge.Http01Challenge/TYPE)
-                    domain (.getDomain (.getIdentifier auth))
-                    server (server/listen challenge options)
-                    resp (client/get (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))]]
-        (is (= (.getAuthorization challenge) (:body resp)))
-        (server/stop-server server)))))
+           order (.create order-builder)
+           authorizations (.getAuthorizations order)
+           domains+challenges (for [authorization authorizations]
+                               [(.getDomain (.getIdentifier authorization))
+                                (.findChallenge authorization org.shredzone.acme4j.challenge.Http01Challenge/TYPE)])
+           challenges (map last domains+challenges)
+           server (server/listen challenges options)]
+      (doseq [[domain challenge] domains+challenges
+              :let [resp (client/get (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))]]
+        (is (= (.getAuthorization challenge) (:body resp))))
+      (server/stop-server server))))
 
-(deftest process-challenge-http-01-again
+(deftest trigger-challenge-http-01
   (testing "sudo socat tcp-listen:80,reuseaddr,fork tcp:localhost:3010"
     (let  [session (kung-fu/session options)
            keypair (keypair/read (:config-dir options) (:keypair-filename options))
@@ -214,11 +219,14 @@
                            (.domains domains))
            order (.create order-builder)
            authorizations (.getAuthorizations order)
-           domains+challenges (for [authorization authorizations]
-                               [(.getDomain (.getIdentifier authorization))
-                                (.findChallenge authorization org.shredzone.acme4j.challenge.Http01Challenge/TYPE)])
-           server (server/listen-all (map last domains+challenges) options)]
-      (doseq [[domain challenge] domains+challenges
-              :let [resp (client/get (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))]]
-        (is (= (.getAuthorization challenge) (:body resp))))
+           challenges (for [authorization authorizations]
+                               (.findChallenge authorization org.shredzone.acme4j.challenge.Http01Challenge/TYPE))         
+           server (server/listen challenges options)]
+      (doseq [authorization authorizations]
+        (is (= false (d/valid? authorization))))
+      (doseq [challenge challenges]
+        (challenge/accept challenge))
+      (doseq [authorization authorizations]
+        (.update authorization)
+        (is (= true (d/valid? authorization))))
       (server/stop-server server))))

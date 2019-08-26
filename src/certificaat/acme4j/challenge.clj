@@ -53,13 +53,17 @@
                 (<!! (a/timeout (or ms 5000)))
                 (log/info "Retrieving challenge status, attempt" y)
                 (let [status (log/spyf "status %s" (.getStatus challenge))]
-                  (if (or (= status Status/VALID) (= status Status/INVALID) (> y 10))
-                    status
-                    (recur (inc y) (try
-                                     (.update challenge)
-                                     (catch AcmeRetryAfterException e
-                                       (log/error (.getMessage e))
-                                       (.getRetryAfter e))))))))))
+                  (cond
+                    (= status Status/VALID) status
+                    (= status Status/INVALID) (do (log/info (.getError challenge))
+                                                  status)
+                    (> y 10) status
+                    :else (recur (inc y) (try
+                                           (.update challenge)
+                                           (catch AcmeRetryAfterException e
+                                             (log/error (.getMessage e))
+                                             (.getRetryAfter e))))))))))
+
 (defn restore [session uri]
                                         ;(Challenge/bind session uri)
   )

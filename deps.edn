@@ -17,4 +17,4 @@
                                cider/cider-nrepl {:mvn/version "0.22.0-beta11"}
                                org.danielsz/system {:mvn/version "0.4.4-SNAPSHOT"}
                                refactor-nrepl {:mvn/version "2.4.1-SNAPSHOT"}}}
-           :test {:extra-paths ["test"]}}}
+           :test {:extra-paths ["test" "resources"]}}}
