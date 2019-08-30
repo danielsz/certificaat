@@ -8,8 +8,8 @@
 
 (def stop-server stop )
 
-(def handler
-  (fn [challenges request]
+(defn handler [challenges]
+  (fn [request]
     (loop [xs challenges]
       (if (= (:uri request) (str "/.well-known/acme-challenge/" (.getToken (first xs))))
         (log/spyf "OK %s" {:status 200
@@ -23,7 +23,7 @@
 
 (defn listen [challenges {{{port :port enabled :enabled} :httpd} :plugins :as options}]
   (when enabled
-    (let [handler (partial handler challenges)]
+    (let [handler (handler challenges)]
       (start-server handler port))))
 
 #_ (defn listen [{{{enabled :enabled} :httpd} :plugins config-dir :config-dir domain :domain :as options}]

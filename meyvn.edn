@@ -42,6 +42,7 @@
   :tools-deps-alias :repl,
   :system my.namespace/base,
   :repl-port 4009,
+  :repl-host "0.0.0.0"
   :cljs
   {:enabled false,
    :with-repl true,
