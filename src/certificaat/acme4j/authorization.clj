@@ -27,5 +27,5 @@
     (let [status (try
                    (.getStatus this)
                    (catch AcmeProtocolException e (log/warn (.getMessage e))))]
-      (log/info "Authorization status:" status)
+      (log/debug "Authorization status:" status)
       (= Status/VALID status)))) ; (.isBefore (.getExpires this) (Instant/now)))

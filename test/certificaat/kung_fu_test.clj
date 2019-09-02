@@ -6,35 +6,40 @@
             [certificaat.acme4j.keypair :as keypair]
             [certificaat.acme4j.challenge :as challenge]
             [certificaat.acme4j.authorization]
+            [certificaat.acme4j.order]
+            [certificaat.acme4j.certificate :as certificate]
             [certificaat.domain :as d]
             [certificaat.plugins.server :as server]
             [clj-http.client :as client]
-            [clojure.test :refer [deftest is use-fixtures testing]]))
+            [clojure.test :refer [deftest is use-fixtures testing]])
+  (:import [java.io FileWriter]
+           [java.time Instant]
+           [java.util Date]))
 
 (def options {:config-dir (str (or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/")) "certificaat/")
-               :keypair-filename "account.key"
-               :key-type :rsa
-               :key-size 2048
-               :acme-uri "acme://letsencrypt.org/staging" ; in production, use acme://letsencrypt.org
-               :domain "zebulun.tuppu.net"
-               :organisation "ChangeMe corporation"
-               :contact "mailto:admin@change.me"
-               :challenges #{"http-01"}
-               :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
-               :plugins {:webroot {:enabled false
-                                   :path "/tmp"}
-                         :httpd {:enabled true
-                                 :port 3010}
-                         :diffie-hellman {:enabled false
-                                          :modulus 2048
-                                          :filename "dhparam.pem"
-                                          :group14 true}
-                         :email {:enabled false
-                                 :smtp {:host "smtp.changeme.org"
-                                        :user "changeme"
-                                        :pass "changeme"
-                                        :port 587}
-                                 :sendmail false}}})
+              :keypair-filename "account.key"
+              :key-type :rsa
+              :key-size 2048
+              :acme-uri "acme://letsencrypt.org/staging" ; in production, use acme://letsencrypt.org
+              :domain "zebulun.tuppu.net"
+              :organisation "ChangeMe corporation"
+              :contact "mailto:admin@change.me"
+              :challenges #{"http-01"}
+              :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
+              :plugins {:webroot {:enabled false
+                                  :path "/tmp"}
+                        :httpd {:enabled true
+                                :port 3010}
+                        :diffie-hellman {:enabled false
+                                         :modulus 2048
+                                         :filename "dhparam.pem"
+                                         :group14 true}
+                        :email {:enabled false
+                                :smtp {:host "smtp.changeme.org"
+                                       :user "changeme"
+                                       :pass "changeme"
+                                       :port 587}
+                                :sendmail false}}})
 
 (defn setup [f]
   (config/setup options)
@@ -125,11 +130,14 @@
         order-builder (doto (.newOrder account)
                         (.domains domains))
         order (.create order-builder)
-        order-url (.getLocation order)]
+        order-url (.getLocation order)
+        url-path (str (:config-dir options) (:domain options) "/order.url")]
+    (spit url-path order-url)
     (is (= (type order) (type (.bindOrder login order-url)))) ; same object
     (is (not= order (.bindOrder login order-url))) ; different instance
     (is (= (.getLocation order) (.getLocation (.bindOrder login order-url)))) ; same url
-    ))
+    (is (= (type order) (type (.bindOrder login (config/load-url url-path)))))
+    (is (= org.shredzone.acme4j.Order (type (.bindOrder login (config/load-url url-path)))))))
 
 (deftest authorization
   (let  [session (kung-fu/session options)
@@ -229,3 +237,40 @@
         (.update authorization)
         (is (= true (d/valid? authorization))))
       (server/stop-server server))))
+
+
+(deftest finalize-order
+  (let [session (kung-fu/session options)
+        keypair (keypair/read (:config-dir options) (:keypair-filename options))
+        account (account/read session keypair)
+        domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
+        order-builder (doto (.newOrder account)
+                        (.domains domains))
+        order (.create order-builder)
+        domain-keypair (keypair/read (str (:config-dir options) (:domain options)) "/domain.key")
+        csrb (certificate/prepare domain-keypair (:domain options) (:organisation options))
+        csr (.getEncoded csrb)
+        fw (FileWriter. (str (:config-dir options) (:domain options) "/cert.csr"))]
+    (.write csrb fw)
+    (.execute order csr)
+    (.update order)
+    (is (= true (d/valid? order)))))
+
+(deftest certificate
+  (let [session (kung-fu/session options)
+        keypair (keypair/read (:config-dir options) (:keypair-filename options))
+        account (account/read session keypair)
+        account-location (.getLocation account)
+        login (.login session account-location keypair)
+        url-path (str (:config-dir options) (:domain options) "/order.url")        
+        order (.bindOrder login (config/load-url url-path))
+        csrb (certificate/load-certificate-request (str (:config-dir options) (:domain options) "/cert.csr"))
+        csr (.getEncoded csrb)
+        _ (.execute order csr)
+        cert (.getCertificate order)
+        X509Certificate (.getCertificate cert)
+        chain (.getCertificateChain cert)
+        fw (FileWriter. (str (:config-dir options) (:domain options) "/cert-chain.crt"))]
+    (is (= org.shredzone.acme4j.Certificate (type cert)))
+    (.writeCertificate cert fw)
+    (is (pos? (.compareTo (.getNotAfter X509Certificate) (Date/from (Instant/now)))))))

@@ -3,10 +3,11 @@
   (:require [clojure.core.async :as a :refer [<! <!! >!! chan thread go-loop]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
+            [certificaat.domain :refer [Certificaat]]
             [clojure.string :as str])
   (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge]
            [org.shredzone.acme4j Status]
-           [org.shredzone.acme4j.exception AcmeRetryAfterException AcmeServerException]))
+           [org.shredzone.acme4j.exception AcmeRetryAfterException AcmeServerException AcmeProtocolException]))
 
 (defn tls-alpn-01 [challenge domain]
   (->> ["With the tls-alpn-01 challenge, you prove to the CA that you are able to control the web server of the domain to be authorized, by letting it respond to a request with a specific self-signed cert utilizing the ALPN extension."
@@ -41,6 +42,15 @@
 
 (defn find [auth challenges]
   (.findCombination auth (into-array String challenges)))
+
+(extend-type Challenge
+  Certificaat
+  (valid? [this]
+    (let [status (try
+                   (.getStatus this)
+                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
+      (log/debug "Order status:" status)
+      (= Status/VALID status))))
 
 (defn accept [challenge]
   (try (.trigger challenge)
