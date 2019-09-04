@@ -6,9 +6,10 @@
             [certificaat.acme4j.keypair :as keypair]
             [certificaat.acme4j.challenge :as challenge]
             [certificaat.acme4j.authorization]
-            [certificaat.acme4j.order]
+            [certificaat.acme4j.order :as order]
             [certificaat.acme4j.certificate :as certificate]
-            [certificaat.domain :as d]
+            [certificaat.domain :as d :refer [marshal valid?]]
+            [certificaat.utils :refer [load-url]]
             [certificaat.plugins.server :as server]
             [clj-http.client :as client]
             [clojure.test :refer [deftest is use-fixtures testing]])
@@ -77,6 +78,7 @@
   (let [session (kung-fu/session options)
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)]
+    (marshal account (str (:config-dir options) "/account.url"))
     (is (= org.shredzone.acme4j.Account (type account)))
     (is (= java.net.URL (type (.getLocation account))))))
 
@@ -101,8 +103,14 @@
   (let [session (kung-fu/session options)
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
-        account-location (.getLocation account)
-        login (org.shredzone.acme4j.Login. account-location keypair session)]
+        login (org.shredzone.acme4j.Login. (.getLocation account) keypair session)]
+    (is (= org.shredzone.acme4j.Login (type login)))
+    (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
+
+(deftest login-method
+  (let [session (kung-fu/session options)
+        keypair (keypair/read (:config-dir options) (:keypair-filename options))
+        login (account/login (str (:config-dir options) "/account.url") keypair session)]
     (is (= org.shredzone.acme4j.Login (type login)))
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 
@@ -110,9 +118,7 @@
   (let [session (kung-fu/session options)
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
-        domains (if (:san options)
-                 (conj (:san options) (:domain options))
-                 [(:domain options)])
+        domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
         order-builder (doto (.newOrder account)
                         (.domains domains))]
     (is (= org.shredzone.acme4j.OrderBuilder (type order-builder)))
@@ -121,32 +127,24 @@
 (deftest resource-binding-order
   (let [session (kung-fu/session options)
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
-        account (account/read session keypair)
-        account-location (.getLocation account)
-        login (.login session account-location keypair)
-        domains (if (:san options)
-                  (conj (:san options) (:domain options))
-                  [(:domain options)])
-        order-builder (doto (.newOrder account)
-                        (.domains domains))
-        order (.create order-builder)
+        account (account/restore session keypair)
+        login (.login session (.getLocation account) keypair)
+        domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
+        order (order/create account domains)
         order-url (.getLocation order)
         url-path (str (:config-dir options) (:domain options) "/order.url")]
-    (spit url-path order-url)
+    (marshal order url-path)
     (is (= (type order) (type (.bindOrder login order-url)))) ; same object
     (is (not= order (.bindOrder login order-url))) ; different instance
     (is (= (.getLocation order) (.getLocation (.bindOrder login order-url)))) ; same url
-    (is (= (type order) (type (.bindOrder login (config/load-url url-path)))))
-    (is (= org.shredzone.acme4j.Order (type (.bindOrder login (config/load-url url-path)))))))
+    (is (= (type order) (type (order/restore login url-path))))
+    (is (= org.shredzone.acme4j.Order (type (.bindOrder login (load-url url-path)))))))
 
 (deftest authorization
   (let  [session (kung-fu/session options)
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
-         account (account/read session keypair)
-         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
-         order-builder (doto (.newOrder account)
-                         (.domains domains))
-         order (.create order-builder)]
+         login (account/login (str (:config-dir options) "/account.url") keypair session)
+         order (order/restore login (str (:config-dir options) (:domain options) "/order.url"))]
     (doseq [auth (.getAuthorizations order)
             :let [status (.getStatus auth)]]
       (is (= org.shredzone.acme4j.Authorization (type auth)))
@@ -159,9 +157,7 @@
          account-location (.getLocation account)
          login (.login session account-location keypair)
          domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
-         order-builder (doto (.newOrder account)
-                         (.domains domains))
-         order (.create order-builder)]
+         order (order/create account domains)]
     (doseq [auth (.getAuthorizations order)
             :let [auth-url (.getLocation auth)]]
       (is (= org.shredzone.acme4j.Authorization (type (.bindAuthorization login auth-url))))
@@ -172,9 +168,7 @@
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          account (account/read session keypair)
          domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
-         order-builder (doto (.newOrder account)
-                         (.domains domains))
-         order (.create order-builder)]
+         order (order/create account domains)]
     (doseq [auth (.getAuthorizations order)
             :let [challenges (.getChallenges auth)]]
       (is (some #{org.shredzone.acme4j.challenge.Http01Challenge} (map type challenges)))
@@ -186,9 +180,7 @@
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          account (account/read session keypair)
          domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
-         order-builder (doto (.newOrder account)
-                         (.domains domains))
-         order (.create order-builder)]
+         order (order/create account domains)]
     (doseq [auth (.getAuthorizations order)
             :let [challenge (.findChallenge auth org.shredzone.acme4j.challenge.Http01Challenge/TYPE)
                   domain (.getDomain (.getIdentifier auth))]]
@@ -202,11 +194,9 @@
   (testing "sudo socat tcp-listen:80,reuseaddr,fork tcp:localhost:3010"
     (let  [session (kung-fu/session options)
            keypair (keypair/read (:config-dir options) (:keypair-filename options))
-           account (account/read session keypair)
+           account (account/restore session keypair)
            domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
-           order-builder (doto (.newOrder account)
-                           (.domains domains))
-           order (.create order-builder)
+           order (order/create account domains)
            authorizations (.getAuthorizations order)
            domains+challenges (for [authorization authorizations]
                                [(.getDomain (.getIdentifier authorization))
@@ -224,9 +214,7 @@
            keypair (keypair/read (:config-dir options) (:keypair-filename options))
            account (account/read session keypair)
            domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
-           order-builder (doto (.newOrder account)
-                           (.domains domains))
-           order (.create order-builder)
+           order (order/create account domains)
            authorizations (.getAuthorizations order)
            challenges (for [authorization authorizations]
                                (.findChallenge authorization org.shredzone.acme4j.challenge.Http01Challenge/TYPE))         
@@ -235,7 +223,7 @@
         (challenge/accept challenge))
       (doseq [authorization authorizations]
         (.update authorization)
-        (is (= true (d/valid? authorization))))
+        (is (= true (valid? authorization))))
       (server/stop-server server))))
 
 
@@ -244,9 +232,7 @@
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
-        order-builder (doto (.newOrder account)
-                        (.domains domains))
-        order (.create order-builder)
+        order (order/create account domains)
         domain-keypair (keypair/read (str (:config-dir options) (:domain options)) "/domain.key")
         csrb (certificate/prepare domain-keypair (:domain options) (:organisation options))
         csr (.getEncoded csrb)
@@ -254,7 +240,7 @@
     (.write csrb fw)
     (.execute order csr)
     (.update order)
-    (is (= true (d/valid? order)))))
+    (is (= true (valid? order)))))
 
 (deftest certificate
   (let [session (kung-fu/session options)
@@ -263,7 +249,7 @@
         account-location (.getLocation account)
         login (.login session account-location keypair)
         url-path (str (:config-dir options) (:domain options) "/order.url")        
-        order (.bindOrder login (config/load-url url-path))
+        order (.bindOrder login (load-url url-path))
         csrb (certificate/load-certificate-request (str (:config-dir options) (:domain options) "/cert.csr"))
         csr (.getEncoded csrb)
         _ (.execute order csr)

@@ -8,8 +8,7 @@
    [certificaat.acme4j.challenge :as challenge]
    [certificaat.acme4j.registration :as registration]
    [certificaat.acme4j.session :as session]
-   [certificaat.utils :refer [exit]]
-   [certificaat.util.configuration :as c]
+   [certificaat.utils :refer [exit load-url]]
    [certificaat.domain :as d]
    [clj-http.client :as client]
    [clojure.java.io :as io]
@@ -27,13 +26,13 @@
 (defn valid? [frozen-resource options]
   (let [session (session options)]
     (condp s/valid? (.getName (io/as-file frozen-resource))
-      ::d/registration-uri (if-let [registration-uri (c/load-url frozen-resource)]
+      ::d/registration-uri (if-let [registration-uri (load-url frozen-resource)]
                             (let [registration (registration/restore session registration-uri)]
                               (d/valid? registration)))
-      ::d/authorization-uri (if-let [authorization-uri (c/load-url frozen-resource)]
+      ::d/authorization-uri (if-let [authorization-uri (load-url frozen-resource)]
                               (let [authorization (authorization/restore session authorization-uri)]
                                 (d/valid? authorization)))
-      ::d/certificate-uri (if-let [certificate-uri (c/load-url frozen-resource)]
+      ::d/certificate-uri (if-let [certificate-uri (load-url frozen-resource)]
                            (let [certificate (certificate/restore session certificate-uri)]
                              (d/valid? certificate))))))
 
@@ -42,7 +41,7 @@
   (.login session account-uri keypair))
 
 (defn account [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
-  (if-let [account-uri (c/load-url (str config-dir "account.url"))]
+  (if-let [account-uri (load-url (str config-dir "account.url"))]
     (let [session (session/create acme-uri)
           keypair (keypair/read config-dir keypair-filename)]
       (account/read session keypair))
@@ -87,7 +86,7 @@
 
 (defn pending? [frozen-resource options]
   (let [session (session options)
-        authorization-uri (c/load-url frozen-resource)
+        authorization-uri (load-url frozen-resource)
         authorization (authorization/restore session authorization-uri)]
     (= Status/PENDING (.getStatus authorization))))
 

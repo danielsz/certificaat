@@ -1,6 +1,7 @@
 (ns certificaat.utils
   (:require [clojure.string :as str]
-            [certificaat.acme4j.certificate :as certificate]))
+            [clojure.java.io :as io])
+  (:import java.net.URL))
 
 (defn error-msg [errors]
   (str "The following errors occurred while parsing your command:\n\n"
@@ -11,8 +12,7 @@
   ;(System/exit status)
 )
 
-(defn info [{config-dir :config-dir domain :domain}]
-  (let [path (str config-dir domain "/")
-        cert-file (str path "domain-chain.crt")
-        key-file (str path "domain.key")]
-    (certificate/info cert-file key-file)))
+(defn load-url [path]
+  (let [url-resource (io/file path)]
+    (when (.exists url-resource)
+      (URL. (slurp url-resource)))))

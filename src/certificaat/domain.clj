@@ -45,7 +45,8 @@
                         :opt-un [::san]))
 
 (defprotocol Certificaat
-  (valid? [this]))
+  (valid? [this])
+  (marshal [this path]))
 
 (def realms (-> (make-hierarchy)
                 (derive :config-dir ::program)

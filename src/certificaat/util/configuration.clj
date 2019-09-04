@@ -5,8 +5,7 @@
             [certificaat.domain :as domain]
             [environ.core :refer [env]]
             [puget.printer :as puget]
-            [clojure.string :as str])
-  (:import java.net.URL))
+            [clojure.string :as str]))
 
 (def defaults {:config-dir (str (or (System/getenv "XDG_CONFIG_HOME") (str (System/getProperty "user.home") "/.config/")) "certificaat/")
                :keypair-filename "account.key"
@@ -73,11 +72,6 @@
         filename (last (str/split (.getPath url) #"/"))]
     (with-open [w (io/output-stream (str config-dir filename))]
       (.write w agreement))))
-
-(defn load-url [path]
-  (let [url-resource (io/file path)]
-    (when (.exists url-resource)
-      (URL. (slurp url-resource)))))
 
 (defn setup [{:keys [config-dir domain key-type key-size keypair-filename] :as options}]
   (let [account-keypair (keypair/create key-type key-size)

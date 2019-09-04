@@ -56,21 +56,27 @@
   [cert key]
   (= (.getModulus (.getPublicKey cert)) (.getModulus (.getPrivate key))))
 
-(defn info [cert-file key-file]
-  (let [cert (CertificateUtils/readCSR (io/input-stream cert-file))
-        issuer (.getIssuerX500Principal cert)
-        subject (.getSubjectX500Principal cert)
-        info {:issuer (.getName issuer)
-              :subject (.getName subject)
-              :san (map str (seq (.getSubjectAlternativeNames cert)))
-              :valid-until (.getNotAfter cert)
-              :path cert-file}]
-    (if (.exists (io/file key-file))
-      (let [key (KeyPairUtils/readKeyPair (FileReader. key-file))]
-        (if (match? cert key)
-          (assoc info :private-key key-file)
-          info))
-      info)))
+(defn info
+  ([{config-dir :config-dir domain :domain}]
+   (let [path (str config-dir domain "/")
+         cert-file (str path "domain-chain.crt")
+         key-file (str path "domain.key")]
+    (info cert-file key-file)))
+  ([cert-file key-file]
+   (let [cert (CertificateUtils/readCSR (io/input-stream cert-file))
+         issuer (.getIssuerX500Principal cert)
+         subject (.getSubjectX500Principal cert)
+         info {:issuer (.getName issuer)
+               :subject (.getName subject)
+               :san (map str (seq (.getSubjectAlternativeNames cert)))
+               :valid-until (.getNotAfter cert)
+               :path cert-file}]
+     (if (.exists (io/file key-file))
+       (let [key (KeyPairUtils/readKeyPair (FileReader. key-file))]
+         (if (match? cert key)
+           (assoc info :private-key key-file)
+           info))
+       info))))
 
 
 (extend-type Certificate
