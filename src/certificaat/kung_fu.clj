@@ -95,11 +95,13 @@
         csr (str path "request.csr")]
     (if (.exists (io/file csr))
       (let [csrb (certificate/load-certificate-request csr)]
-        (certificate/request csrb reg))
+        ;(certificate/request csrb reg)
+        )
       (let [domain-keypair (account/restore path "domain.key")
             csrb (certificate/prepare domain-keypair domain organisation (when san san))]
         (certificate/persist-certificate-request csr csrb)
-        (certificate/request csrb reg)))))
+        ;(certificate/request csrb reg)
+        ))))
 
 (defn request [{config-dir :config-dir domain :domain :as options} reg]
   (let [path (str config-dir domain "/")

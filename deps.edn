@@ -14,7 +14,7 @@
         environ {:mvn/version "1.1.0"}                
         org.danielsz/golem {:mvn/version "0.0.1-SNAPSHOT"}}
  :aliases {:repl {:extra-deps {nrepl {:mvn/version "0.6.0"}
-                               cider/cider-nrepl {:mvn/version "0.22.0-beta11"}
+                               cider/cider-nrepl {:mvn/version "0.22.2"}
                                org.danielsz/system {:mvn/version "0.4.4-SNAPSHOT"}
                                refactor-nrepl {:mvn/version "2.4.1-SNAPSHOT"}}}
            :test {:extra-paths ["test" "resources"]}}}

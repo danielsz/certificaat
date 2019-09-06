@@ -2,6 +2,7 @@
   (:require [certificaat.acme4j.account :as account]
             [certificaat.acme4j.registration :as registration]
             [certificaat.domain :refer [Certificaat]]
+            [certificaat.utils :refer [load-url]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [clojure.java.io :as io])
@@ -11,7 +12,7 @@
            [java.security.cert CertificateExpiredException CertificateNotYetValidException]
            [java.io FileWriter FileReader]))
 
-(defn prepare [keypair domain organization & [additional-domains]]
+(defn prepare [keypair domain organization & additional-domains]
   (let [builder (CSRBuilder.)]
     (.addDomain builder domain)
     (when additional-domains
@@ -29,24 +30,12 @@
   (let [input (io/input-stream path)]
     (CertificateUtils/readCSR input)))
 
-(defn request [csrb reg]
-  (.requestCertificate reg (.getEncoded csrb)))
+(defn persist [cert path]
+  (let [fw (FileWriter. path)]
+    (.writeCertificate cert fw)))
 
-(defn download [cert]
-  [(.download cert) (.downloadChain cert)])
-
-(defn persist [path cert]
-  (let [[cert chain] (download cert)
-        fw (FileWriter. path)]
-    ;(CertificateUtils/writeX509CertificateChain fw cert chain)
-    ))
-
-(defn delete [cert]
-  (.revoke cert))
-
-(defn restore [session uri]
-  ;(Certificate/bind session uri)
-  )
+(defn restore [login path]
+  (.bindCertificate login (load-url path)))
 
 (defn revoke [cert]
   (.revoke cert))
@@ -86,4 +75,6 @@
                    (try (.checkValidity cert)
                         true
                         (catch CertificateExpiredException e false)
-                        (catch CertificateNotYetValidException e false)))))
+                        (catch CertificateNotYetValidException e false))))
+  (marshal [this path]
+    (spit path (.getLocation this))))

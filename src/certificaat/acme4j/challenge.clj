@@ -4,6 +4,7 @@
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [certificaat.domain :refer [Certificaat]]
+            [certificaat.utils :refer [load-url]]
             [clojure.string :as str])
   (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge]
            [org.shredzone.acme4j Status]
@@ -50,7 +51,9 @@
                    (.getStatus this)
                    (catch AcmeProtocolException e (log/warn (.getMessage e))))]
       (log/debug "Order status:" status)
-      (= Status/VALID status))))
+      (= Status/VALID status)))
+  (marshal [this path]
+    (spit path (.getLocation this))))
 
 (defn accept [challenge]
   (try (.trigger challenge)
@@ -74,6 +77,8 @@
                                              (log/error (.getMessage e))
                                              (.getRetryAfter e))))))))))
 
-(defn restore [session uri]
-                                        ;(Challenge/bind session uri)
-  )
+
+(defn restore [login path]
+  (.bindChallenge login (load-url path)))
+
+

@@ -255,8 +255,9 @@
         _ (.execute order csr)
         cert (.getCertificate order)
         X509Certificate (.getCertificate cert)
-        chain (.getCertificateChain cert)
-        fw (FileWriter. (str (:config-dir options) (:domain options) "/cert-chain.crt"))]
+        chain (.getCertificateChain cert)]
     (is (= org.shredzone.acme4j.Certificate (type cert)))
-    (.writeCertificate cert fw)
+    (.checkValidity X509Certificate)
+    (d/marshal cert (str (:config-dir options) (:domain options) "/cert.url"))
+    (certificate/persist cert (str (:config-dir options) (:domain options) "/domain-chain.crt"))
     (is (pos? (.compareTo (.getNotAfter X509Certificate) (Date/from (Instant/now)))))))
