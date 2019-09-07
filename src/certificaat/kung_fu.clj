@@ -22,33 +22,47 @@
 (defn session [{:keys [acme-uri]}]
   (session/create acme-uri))
 
-(defn valid? [frozen-resource options]
-  (let [session (session options)]
-    (condp s/valid? (.getName (io/as-file frozen-resource))
-      ::d/authorization-uri (if-let [authorization-uri (load-url frozen-resource)]
-                              (let [authorization (authorization/restore session authorization-uri)]
+(defn valid? [path options]
+  (let [session (session options)
+        keypair (keypair/read (:config-dir options) (:keypair-filename options))]
+    (condp s/valid? (.getName (io/as-file path))
+      ::d/account-url (when (.exists (io/file path))
+                        (let [account (account/restore session keypair)]
+                          (d/valid? account)))
+      ::d/order-url (when-let [order-url (load-url path)]
+                              (let [order (order/restore session order-url)]
+                                (d/valid? order)))
+      ::d/authorization-url (when-let [authorization-url (load-url path)]
+                              (let [authorization (authorization/restore session authorization-url)]
                                 (d/valid? authorization)))
-      ::d/certificate-uri (if-let [certificate-uri (load-url frozen-resource)]
-                           (let [certificate (certificate/restore session certificate-uri)]
+      ::d/certificate-url (when-let [certificate-url (load-url path)]
+                           (let [certificate (certificate/restore session certificate-url)]
                              (d/valid? certificate))))))
-;       ::d/registration-uri (if-let [registration-uri (load-url frozen-resource)]
-;(let [registration (registration/restore session registration-uri)]
-;  (d/valid? registration)
 
-
-(defn login [session account-uri keypair]
-  (.login session account-uri keypair))
+(defn pending? [path options]
+  (let [session (session options)]
+    (condp s/valid? (.getName (io/as-file path))
+      ::d/order-url (when-let [order-url (load-url path)]
+                      (let [order (order/restore session order-url)]
+                        (d/pending? order)))
+      ::d/authorization-url (when-let [authorization-url (load-url path)]
+                              (let [authorization (authorization/restore session authorization-url)]
+                                (d/pending? authorization)))
+      ::d/certificate-url (when-let [certificate-url (load-url path)]
+                            (let [certificate (certificate/restore session certificate-url)]
+                             (d/pending? certificate))))))
 
 (defn account [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
-  (if-let [account-uri (load-url (str config-dir "account.url"))]
+  (if-let [account-url (load-url (str config-dir "account.url"))]
     (let [session (session/create acme-uri)
           keypair (keypair/read config-dir keypair-filename)]
       (account/read session keypair))
     (let [session (session/create acme-uri)
           keypair (keypair/read config-dir keypair-filename)
-          account (account/create session keypair contact)]
-      (spit (str config-dir "account.url") (.getLocation account))
+          account (account/create session keypair contact :with-login false)]
+      (d/marshal account (str (:config-dir options) "account.url"))
       account)))
+
 
 (defn order [account {:keys [config-dir domain san challenges]}]
   (let [domains (if san
@@ -84,11 +98,6 @@
     (for [challenge challenges]
       (challenge/accept challenge))))
 
-(defn pending? [frozen-resource options]
-  (let [session (session options)
-        authorization-uri (load-url frozen-resource)
-        authorization (authorization/restore session authorization-uri)]
-    (= Status/PENDING (.getStatus authorization))))
 
 (defn get-certificate [{:keys [config-dir domain organisation san] :as options} reg]
   (let [path (str config-dir domain "/")
@@ -103,15 +112,11 @@
         ;(certificate/request csrb reg)
         ))))
 
-(defn request [{config-dir :config-dir domain :domain :as options} reg]
+(defn request-certificate [{config-dir :config-dir domain :domain :as options} reg]
   (let [path (str config-dir domain "/")
         cert (get-certificate options reg)]
     (certificate/persist (str path "domain-chain.crt") cert)
-    (spit (str path "certificate.uri") (.getLocation cert))
+    (spit (str path "certificate.url") (.getLocation cert))
     (log/info "Well done! You will find your certificate chain in" path)))
 
 (def explain challenge/explain)
-
-(defn register [x])
-
-(defn info [x])

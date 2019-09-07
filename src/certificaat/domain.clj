@@ -24,10 +24,11 @@
 (s/def ::organisation string?)
 (s/def ::challenge #{"http-01" "dns-01" "tls-sni-01" "tls-sni-02" "oob-01"})
 (s/def ::challenges (s/coll-of ::challenge :kind set?))
-(s/def ::challenge-uri #(re-matches #"challenge\..*\.\d+\.uri" %))
-(s/def ::authorization-uri #(re-matches #"authorization\..*\.uri" %))
-(s/def ::registration-uri #(re-matches #"registration.uri" %))
-(s/def ::certificate-uri #(re-matches #"certificate.uri" %))
+(s/def ::challenge-uri #(re-matches #"challenge\..*\.\d+\.url" %))
+(s/def ::authorization-url #(re-matches #"authorization\..*\.url" %))
+(s/def ::order-url #(re-matches #"order.url" %))
+(s/def ::account-url #(re-matches #"account.url" %))
+(s/def ::certificate-url #(re-matches #"certificate.url" %))
 
 
 (s/def ::hook #{:before-challenge :after-request})
@@ -46,6 +47,7 @@
 
 (defprotocol Certificaat
   (valid? [this])
+  (pending? [this])
   (marshal [this path]))
 
 (def realms (-> (make-hierarchy)

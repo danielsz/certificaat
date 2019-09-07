@@ -87,7 +87,7 @@
   (let [session (kung-fu/session options)
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         contact (:contact options)
-        login (account/create session keypair contact :with-login true)]
+        login (account/create session keypair contact :with-login true)]    
     (is (= org.shredzone.acme4j.Login (type login)))
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 

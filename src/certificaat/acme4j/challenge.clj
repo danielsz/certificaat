@@ -50,8 +50,14 @@
     (let [status (try
                    (.getStatus this)
                    (catch AcmeProtocolException e (log/warn (.getMessage e))))]
-      (log/debug "Order status:" status)
+      (log/debug "Challenge status:" status)
       (= Status/VALID status)))
+  (pending? [this]
+    (let [status (try
+                   (.getStatus this)
+                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
+      (log/debug "Challenge status:" status)
+      (= Status/PENDING status)))
   (marshal [this path]
     (spit path (.getLocation this))))
 

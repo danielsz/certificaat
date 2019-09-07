@@ -25,5 +25,11 @@
                    (catch AcmeProtocolException e (log/warn (.getMessage e))))]
       (log/debug "Authorization status:" status)
       (= Status/VALID status))) ; (.isBefore (.getExpires this) (Instant/now)))
+  (pending? [this]
+    (let [status (try
+                   (.getStatus this)
+                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
+      (log/debug "Authorization status:" status)
+      (= Status/PENDING status)))
   (marshal [this path]
     (spit path (.getLocation this)))) 

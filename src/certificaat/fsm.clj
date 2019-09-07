@@ -5,13 +5,14 @@
             [certificaat.util.configuration :as config]
             [certificaat.hooks :as h]
             [clojure.core.async :refer [<!!]]
-            [certificaat.plugins.webroot :as w])
+            [certificaat.plugins.webroot :as w]
+            [clojure.java.io :as io])
   (:import clojure.lang.ExceptionInfo
            (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitedException)
            org.shredzone.acme4j.Status))
 
 (def setup config/setup)
-(defn register [options] (k/register options))
+
 (defn authorize [{config-dir :config-dir domain :domain :as options}]
   (let [reg (k/register options)]
     (doseq [[name auth challenges] (k/authorize options reg)
@@ -32,10 +33,10 @@
           (println "Sorry, challenge failed." resp)))
       (catch AcmeServerException e (exit 1 (.getMessage e)))))
 
-(defn request [options]
+(defn request-certificate [options]
   (let [reg (k/register options)]
     (try 
-      (k/request options reg) ; will throw AcmeUnauthorizedException if the authorizations of some or all involved domains have expired
+      (k/request-certificate options reg) ; will throw AcmeUnauthorizedException if the authorizations of some or all involved domains have expired
       (catch AcmeRateLimitedException e (exit 1 (.getMessage e)))
       (catch AcmeUnauthorizedException e (exit 1 (.getMessage e)))) ))
 
@@ -65,8 +66,11 @@
                      :find-account [{:valid-when [#(k/valid? (str config-dir "account.url") options)]
                                      :side-effect #(do)
                                      :next-state :find-authorization}
-                                    {:valid-when []
-                                     :side-effect #(register options)
+                                    {:valid-when [#(not (.exists (io/file (str config-dir domain "/config.edn"))))]
+                                     :side-effect #(k/account options)
+                                     :next-state :find-account}
+                                    {:valid-when [#(not (.exists (io/file (str config-dir "config.edn"))))]
+                                     :side-effect #(config/setup options)
                                      :next-state :find-account}]}
         sm (state-machine state-table :find-certificate)]
     (target-state sm)))

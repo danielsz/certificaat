@@ -6,7 +6,8 @@
             [certificaat.domain :refer [Certificaat]]
             [certificaat.utils :refer [load-url]])
   (:import
-   [org.shredzone.acme4j Account AccountBuilder Login]))
+   [org.shredzone.acme4j Account AccountBuilder Login Status]
+   [org.shredzone.acme4j.exception AcmeProtocolException]))
 
 (defn create [session keypair contact & {:keys [with-login] :or {with-login false}}]
   (let [account-builder (doto (AccountBuilder.)
@@ -30,5 +31,11 @@
 
 (extend-type Account
   Certificaat
+  (valid? [this]
+    (let [status (try
+                   (.getStatus this)
+                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
+      (log/debug "Account status:" status)
+      (= Status/VALID status)))
   (marshal [this path]
     (spit path (.getLocation this))))
