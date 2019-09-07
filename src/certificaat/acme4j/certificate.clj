@@ -1,12 +1,11 @@
 (ns certificaat.acme4j.certificate
   (:require [certificaat.acme4j.account :as account]
-            [certificaat.acme4j.registration :as registration]
             [certificaat.domain :refer [Certificaat]]
             [certificaat.utils :refer [load-url]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [clojure.java.io :as io])
-  (:import [org.shredzone.acme4j Certificate]
+  (:import [org.shredzone.acme4j Certificate RevocationReason]
            [org.shredzone.acme4j.util CSRBuilder CertificateUtils]
            [org.shredzone.acme4j.util KeyPairUtils]
            [java.security.cert CertificateExpiredException CertificateNotYetValidException]
@@ -22,7 +21,7 @@
       (.setOrganization organization)
       (.sign keypair))))
 
-(defn persist-certificate-request [path csrb]
+(defn persist-certificate-request [csrb path]
   (let [fw (FileWriter. path)]
     (.write csrb fw)))
 
@@ -37,8 +36,15 @@
 (defn restore [login path]
   (.bindCertificate login (load-url path)))
 
-(defn revoke [cert]
-  (.revoke cert))
+(defn revoke
+  ([cert]
+   (.revoke cert))
+  ([cert reason]
+   (.revoke cert reason))
+  ([login cert reason]
+   (Certificate/revoke login cert reason))
+  ([session domain-keypair cert reason]
+   (Certificate/revoke session domain-keypair cert reason)))
 
 (defn match?
   "Utility function to determine if a private key matches a certificate"

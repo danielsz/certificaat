@@ -64,7 +64,8 @@
     (is (= org.shredzone.acme4j.Session (type session)))
     (is (= org.shredzone.acme4j.Metadata (type metadata)))
     (is (= java.net.URI (type (.getTermsOfService metadata))))
-    (is (= java.net.URL (type (.getWebsite metadata))))))
+    (is (= java.net.URL (type (.getWebsite metadata))))
+    (is (false? (.isExternalAccountRequired metadata)))))
 
 (deftest account-creation
   (let [session (kung-fu/session options)
@@ -235,9 +236,8 @@
         order (order/create account domains)
         domain-keypair (keypair/read (str (:config-dir options) (:domain options)) "/domain.key")
         csrb (certificate/prepare domain-keypair (:domain options) (:organisation options))
-        csr (.getEncoded csrb)
-        fw (FileWriter. (str (:config-dir options) (:domain options) "/cert.csr"))]
-    (.write csrb fw)
+        csr (.getEncoded csrb)]
+    (certificate/persist-certificate-request csrb (str (:config-dir options) (:domain options) "/cert.csr")) 
     (.execute order csr)
     (.update order)
     (is (= true (valid? order)))))
@@ -246,8 +246,7 @@
   (let [session (kung-fu/session options)
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
-        account-location (.getLocation account)
-        login (.login session account-location keypair)
+        login (.login session (.getLocation account) keypair)
         url-path (str (:config-dir options) (:domain options) "/order.url")        
         order (.bindOrder login (load-url url-path))
         csrb (certificate/load-certificate-request (str (:config-dir options) (:domain options) "/cert.csr"))
@@ -257,7 +256,7 @@
         X509Certificate (.getCertificate cert)
         chain (.getCertificateChain cert)]
     (is (= org.shredzone.acme4j.Certificate (type cert)))
+    (certificate/persist cert (str (:config-dir options) (:domain options) "/domain-chain.crt"))
     (.checkValidity X509Certificate)
     (d/marshal cert (str (:config-dir options) (:domain options) "/cert.url"))
-    (certificate/persist cert (str (:config-dir options) (:domain options) "/domain-chain.crt"))
     (is (pos? (.compareTo (.getNotAfter X509Certificate) (Date/from (Instant/now)))))))

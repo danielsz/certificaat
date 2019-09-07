@@ -6,7 +6,6 @@
    [certificaat.acme4j.authorization :as authorization]
    [certificaat.acme4j.certificate :as certificate]
    [certificaat.acme4j.challenge :as challenge]
-   [certificaat.acme4j.registration :as registration]
    [certificaat.acme4j.session :as session]
    [certificaat.utils :refer [exit load-url]]
    [certificaat.domain :as d]
@@ -26,15 +25,15 @@
 (defn valid? [frozen-resource options]
   (let [session (session options)]
     (condp s/valid? (.getName (io/as-file frozen-resource))
-      ::d/registration-uri (if-let [registration-uri (load-url frozen-resource)]
-                            (let [registration (registration/restore session registration-uri)]
-                              (d/valid? registration)))
       ::d/authorization-uri (if-let [authorization-uri (load-url frozen-resource)]
                               (let [authorization (authorization/restore session authorization-uri)]
                                 (d/valid? authorization)))
       ::d/certificate-uri (if-let [certificate-uri (load-url frozen-resource)]
                            (let [certificate (certificate/restore session certificate-uri)]
                              (d/valid? certificate))))))
+;       ::d/registration-uri (if-let [registration-uri (load-url frozen-resource)]
+;(let [registration (registration/restore session registration-uri)]
+;  (d/valid? registration)
 
 
 (defn login [session account-uri keypair]
@@ -68,7 +67,8 @@
                   (conj san domain)
                   [domain])]
     (for [domain domains
-          :let [auth (authorization/create domain reg)]]
+          :let [auth 1 ;(authorization/create domain reg)
+                ]]
       [domain auth (challenge/find auth challenges)])))
 
 (defn challenge [{domain :domain config-dir :config-dir :as options}]

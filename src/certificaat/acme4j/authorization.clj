@@ -10,10 +10,6 @@
            org.shredzone.acme4j.Status
            org.shredzone.acme4j.exception.AcmeProtocolException))
 
-(defn create [domain reg]
-  (let [auth (.authorizeDomain reg domain)]
-    (log/info "Authorization for domain" domain)
-    auth))
 
 (defn delete [auth]
   (.deactivate auth))
