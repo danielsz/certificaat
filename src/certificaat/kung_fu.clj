@@ -107,9 +107,9 @@
             :when (not (.isWildcard auth))]
       (d/marshal auth (str (:config-dir options) (:domain options) "/authorization." (.getDomain (.getIdentifier auth)) ".url")))))
 
-(defn challenge [{domain :domain config-dir :config-dir acme-uri :acme-uri :as options}]
+(defn challenge [{:keys [config-dir keypair-filename acme-uri domain] :as options}]
   (let  [session (session/create acme-uri)
-         keypair (keypair/read (:config-dir options) (:keypair-filename options))
+         keypair (keypair/read config-dir keypair-filename)
          login (account/login (str config-dir "account.url") keypair session)
          order (order/restore login (str config-dir domain "/order.url"))]
     (doseq [auth (.getAuthorizations order)
@@ -137,18 +137,32 @@
             :let [challenge (challenge/find auth (first (:challenges options)))]]
       (challenge/accept challenge))))
 
-(defn get-certificate [{:keys [config-dir domain organisation san] :as options} reg]
-  (let [path (str config-dir domain "/")
-        csr (str path "request.csr")]
-    (if (.exists (io/file csr))
-      (let [csrb (certificate/load-certificate-request csr)]
-        ;(certificate/request csrb reg)
-        )
-      (let [domain-keypair (account/restore path "domain.key")
-            csrb (certificate/prepare domain-keypair domain organisation (when san san))]
-        (certificate/persist-certificate-request csr csrb)
-        ;(certificate/request csrb reg)
-        ))))
+
+(defn finalize-order [{:keys [domain config-dir acme-uri keypair-filename] :as options}]
+  (let [session (session/create acme-uri)
+        keypair (keypair/read config-dir keypair-filename)
+        login (account/login (str config-dir "account.url") keypair session)
+        order (order/restore login (str config-dir domain "/order.url"))
+        domain-keypair (keypair/read (str config-dir domain "/domain.key"))
+        csrb (certificate/prepare domain-keypair domain (:organisation options))
+        csr (.getEncoded csrb)]
+    (certificate/persist-certificate-request csrb (str config-dir domain "/cert.csr")) 
+    (.execute order csr)))
+
+
+(defn get-certificate [{:keys [domain config-dir acme-uri keypair-filename] :as options}]
+  (let [session (session/create acme-uri)
+        keypair (keypair/read config-dir keypair-filename)
+        login (account/login (str config-dir "account.url") keypair session)
+        order (order/restore login (str config-dir domain "/order.url"))
+        cert (.getCertificate order)
+        X509Certificate (.getCertificate cert)
+        chain (.getCertificateChain cert)]
+    (certificate/persist cert (str config-dir domain "/domain-chain.crt"))
+    (.checkValidity X509Certificate)
+    (d/marshal cert (str config-dir domain "/cert.url"))
+    (log/info "Well done! You will find your certificate chain in" (str config-dir domain "/"))))
+
 
 (defn request-certificate [{config-dir :config-dir domain :domain :as options} reg]
   (let [path (str config-dir domain "/")

@@ -20,16 +20,13 @@
 (extend-type Order
   Certificaat
   (valid? [this]
-    (let [status (try
-                   (.getStatus this)
-                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
-      (log/debug "Order status:" status)
-      (= Status/VALID status)))
+    (log/debug "Order status:" (.getStatus this))
+    (= Status/VALID (.getStatus this)))
   (pending? [this]
-    (let [status (try
-                   (.getStatus this)
-                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
-      (log/debug "Order status:" status)
-      (= Status/PENDING status)))
+    (log/debug "Order status:" (.getStatus this))
+    (= Status/PENDING (.getStatus this)))
+  (invalid? [this]
+    (log/debug "Order status:" (.getStatus this))
+    (= Status/INVALID (.getStatus this)))
   (marshal [this path]
     (spit path (.getLocation this))))
