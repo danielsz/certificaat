@@ -24,7 +24,7 @@
 (s/def ::organisation string?)
 (s/def ::challenge #{"http-01" "dns-01" "tls-alpn-01"})
 (s/def ::challenges (s/coll-of ::challenge :kind set?))
-(s/def ::challenge-uri #(re-matches #"challenge\..*\.\d+\.url" %))
+(s/def ::challenge-url #(re-matches #"challenge\..*\.url" %))
 (s/def ::authorization-url #(re-matches #"authorization\..*\.url" %))
 (s/def ::order-url #(re-matches #"order.url" %))
 (s/def ::account-url #(re-matches #"account.url" %))
@@ -48,6 +48,10 @@
 (defprotocol Certificaat
   (valid? [this])
   (pending? [this])
+  (invalid? [this])
+  (deactivated? [this])
+  (expired? [this])
+  (revoked? [this])
   (marshal [this path]))
 
 (def realms (-> (make-hierarchy)

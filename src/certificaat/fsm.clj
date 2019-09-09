@@ -3,9 +3,8 @@
             [certificaat.utils :refer [exit error-msg]]
             [certificaat.kung-fu :as k]
             [certificaat.util.configuration :as config]
-            [certificaat.hooks :as h]
+            [certificaat.hooks :as hooks]
             [clojure.core.async :refer [<!!]]
-            [certificaat.plugins.webroot :as w]
             [clojure.java.io :as io])
   (:import clojure.lang.ExceptionInfo
            (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitedException)
@@ -19,16 +18,14 @@
                                         {:valid-when []
                                          :side-effect #(do)
                                          :next-state :find-authorizations}]                     
-                     :find-challenges [{:valid-when [#(k/pending? (str config-dir domain "/challenge." domain ".url") options)]
-                                        :side-effect #(k/accept-challenges options)
-                                        :next-state :find-certificate}
-                                       {:valid-when []
-                                        :side-effect #(do)
-                                        :next-state :find-authorizations}]
                      :find-authorizations [{:valid-when [#(k/pending? (str config-dir domain "/authorization." domain ".url") options)]
                                             :side-effect #(do (k/challenge options)
-                                                              (h/run-hooks :before-challenge options))
+                                                              (hooks/run :before-challenge options)
+                                                              (k/accept-challenges options))
                                             :next-state :find-challenges}
+                                           {:valid-when [#(k/invalid? (str config-dir domain "/authorization." domain ".url") options)]
+                                            :side-effect #(utils/exit 1 "Authorization is invalid. Please reissue order")
+                                            :next-state nil}
                                            {:valid-when []
                                             :side-effect #(do)
                                             :next-state :find-order}]

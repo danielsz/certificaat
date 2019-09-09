@@ -88,7 +88,4 @@
                                              (.getRetryAfter e))))))))))
 
 
-(defn restore [login path]
-  (.bindChallenge login (load-url path)))
-
 

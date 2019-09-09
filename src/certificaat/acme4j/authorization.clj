@@ -20,16 +20,22 @@
 (extend-type Authorization
   Certificaat
   (valid? [this]
-    (let [status (try
-                   (.getStatus this)
-                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
-      (log/debug "Authorization status:" status)
-      (= Status/VALID status))) ; (.isBefore (.getExpires this) (Instant/now)))
+    (log/debug "Authorization status:" (.getStatus this))
+    (= Status/VALID (.getStatus this))) 
+  (invalid? [this]
+    (log/debug "Authorization status:" (.getStatus this))
+    (= Status/INVALID (.getStatus this)))
   (pending? [this]
-    (let [status (try
-                   (.getStatus this)
-                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
-      (log/debug "Authorization status:" status)
-      (= Status/PENDING status)))
+    (log/debug "Authorization status:" (.getStatus this))
+    (= Status/PENDING (.getStatus this)))
+  (deactivated? [this]
+    (log/debug "Authorization status:" (.getStatus this))
+    (= Status/DEACTIVATED (.getStatus this)))
+  (expired? [this]
+    (log/debug "Authorization status:" (.getStatus this))
+    (= Status/EXPIRED (.getStatus this)))
+  (revoked? [this]
+    (log/debug "Authorization status:" (.getStatus this))
+    (= Status/REVOKED (.getStatus this)))
   (marshal [this path]
-    (spit path (.getLocation this)))) 
+    (spit path (.getLocation this))))
