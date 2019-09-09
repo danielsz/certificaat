@@ -26,6 +26,7 @@
               :organisation "ChangeMe corporation"
               :contact "mailto:admin@change.me"
               :challenges #{"http-01"}
+              :san #{"foo.tuppu.net"}
               :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
               :plugins {:webroot {:enabled false
                                   :path "/tmp"}
@@ -218,7 +219,7 @@
            order (order/create account domains)
            authorizations (.getAuthorizations order)
            challenges (for [authorization authorizations]
-                               (.findChallenge authorization org.shredzone.acme4j.challenge.Http01Challenge/TYPE))         
+                        (challenge/find authorization (first (:challenges options))))         
            server (server/listen challenges options)]
       (doseq [challenge challenges]
         (challenge/accept challenge))
@@ -226,7 +227,6 @@
         (.update authorization)
         (is (= true (valid? authorization))))
       (server/stop-server server))))
-
 
 (deftest finalize-order
   (let [session (kung-fu/session options)

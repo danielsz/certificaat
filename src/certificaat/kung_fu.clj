@@ -1,12 +1,12 @@
 (ns certificaat.kung-fu
   (:require
+   [certificaat.acme4j.session :as session]
    [certificaat.acme4j.keypair :as keypair]
    [certificaat.acme4j.account :as account]
+   [certificaat.acme4j.challenge :as challenge]
    [certificaat.acme4j.order :as order]
    [certificaat.acme4j.authorization :as authorization]
    [certificaat.acme4j.certificate :as certificate]
-   [certificaat.acme4j.challenge :as challenge]
-   [certificaat.acme4j.session :as session]
    [certificaat.utils :refer [exit load-url]]
    [certificaat.domain :as d]
    [clj-http.client :as client]
@@ -19,37 +19,37 @@
            org.shredzone.acme4j.exception.AcmeUnauthorizedException
            org.shredzone.acme4j.Status))
 
-(defn session [{:keys [acme-uri]}]
-  (session/create acme-uri))
-
-(defn valid? [path options]
-  (let [session (session options)
-        keypair (keypair/read (:config-dir options) (:keypair-filename options))]
+(defn valid? [path {:keys [config-dir keypair-filename acme-uri] :as options}]
+  (let [session (session/create acme-uri)
+        keypair (keypair/read config-dir keypair-filename)
+        login (account/login (str config-dir "account.url") keypair session)]
     (condp s/valid? (.getName (io/as-file path))
       ::d/account-url (when (.exists (io/file path))
                         (let [account (account/restore session keypair)]
                           (d/valid? account)))
-      ::d/order-url (when-let [order-url (load-url path)]
-                              (let [order (order/restore session order-url)]
-                                (d/valid? order)))
-      ::d/authorization-url (when-let [authorization-url (load-url path)]
-                              (let [authorization (authorization/restore session authorization-url)]
+      ::d/order-url (when (.exists (io/file path))
+                      (let [order (order/restore login path)]
+                        (d/valid? order)))
+      ::d/authorization-url (when (.exists (io/file path))
+                              (let [authorization (authorization/restore login path)]
                                 (d/valid? authorization)))
-      ::d/certificate-url (when-let [certificate-url (load-url path)]
-                           (let [certificate (certificate/restore session certificate-url)]
+      ::d/certificate-url (when (.exists (io/file path))
+                           (let [certificate (certificate/restore login path)]
                              (d/valid? certificate))))))
 
-(defn pending? [path options]
-  (let [session (session options)]
+(defn pending? [path {:keys [config-dir keypair-filename acme-uri] :as options}]
+  (let [session (session/create acme-uri)
+        keypair (keypair/read config-dir keypair-filename)
+        login (account/login (str config-dir "account.url") keypair session)]
     (condp s/valid? (.getName (io/as-file path))
-      ::d/order-url (when-let [order-url (load-url path)]
-                      (let [order (order/restore session order-url)]
+      ::d/order-url (when (.exists (io/file path))
+                      (let [order (order/restore login path)]
                         (d/pending? order)))
-      ::d/authorization-url (when-let [authorization-url (load-url path)]
-                              (let [authorization (authorization/restore session authorization-url)]
+      ::d/authorization-url (when (.exists (io/file path))
+                              (let [authorization (authorization/restore login path)]
                                 (d/pending? authorization)))
-      ::d/certificate-url (when-let [certificate-url (load-url path)]
-                            (let [certificate (certificate/restore session certificate-url)]
+      ::d/certificate-url (when (.exists (io/file path))
+                            (let [certificate (certificate/restore login path)]
                              (d/pending? certificate))))))
 
 (defn account [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
@@ -60,44 +60,55 @@
     (let [session (session/create acme-uri)
           keypair (keypair/read config-dir keypair-filename)
           account (account/create session keypair contact :with-login false)]
-      (d/marshal account (str (:config-dir options) "account.url"))
+      (d/marshal account (str config-dir "account.url"))
       account)))
 
 
-(defn order [account {:keys [config-dir domain san challenges]}]
-  (let [domains (if san
-                  (conj san domain)
-                  [domain])]
-    (order/create account (str/join " " domains))))
+(defn order [{:keys [config-dir keypair-filename acme-uri domain san] :as options}]
+  (if-let [order-url (load-url (str config-dir domain "/order.url"))]
+    (let [session (session/create acme-uri)
+          keypair (keypair/read config-dir keypair-filename)
+          login (account/login (str config-dir "account.url") keypair session)]
+      (order/restore login (str config-dir domain "/order.url")))
+    (let [session (session/create acme-uri)
+          keypair (keypair/read config-dir keypair-filename)
+          account (account/restore session keypair)
+          domains (if san (conj san domain) [domain])
+          order-builder (doto (.newOrder account)
+                          (.domains domains))
+          order (order/create account domains)]
+      (d/marshal order (str config-dir domain "/order.url"))
+      order)))
 
-(defn authorize [order]
-  (doseq [authorization (.getAuthorizations order)]
-    (when (valid? authorization)
-      ;(process authorization)
-      )))
+(defn authorize [{:keys [config-dir keypair-filename acme-uri domain san] :as options}]
+  (let  [session (session/create acme-uri)
+         keypair (keypair/read (:config-dir options) (:keypair-filename options))
+         login (account/login (str (:config-dir options) "/account.url") keypair session)
+         order (order/restore login (str (:config-dir options) (:domain options) "/order.url"))]
+    (doseq [auth (.getAuthorizations order)
+            :let [status (.getStatus auth)]
+            :when (not (.isWildcard auth))]
+      (d/marshal auth (str (:config-dir options) (:domain options) "/authorization." (.getDomain (.getIdentifier auth)) ".url")))))
 
-(defn authorize [{:keys [config-dir domain san challenges]} reg]
-  (let [domains (if san
-                  (conj san domain)
-                  [domain])]
-    (for [domain domains
-          :let [auth 1 ;(authorization/create domain reg)
-                ]]
-      [domain auth (challenge/find auth challenges)])))
+(defn challenge [{domain :domain config-dir :config-dir acme-uri :acme-uri :as options}]
+  (let  [session (session/create acme-uri)
+         keypair (keypair/read (:config-dir options) (:keypair-filename options))
+         login (account/login (str config-dir "account.url") keypair session)
+         order (order/restore login (str config-dir domain "/order.url"))]
+    (doseq [auth (.getAuthorizations order)
+            :let [challenge (challenge/find auth (first (:challenges options)))
+                  domain (.getDomain (.getIdentifier auth))]]
+      (d/marshal challenge (str config-dir (:domain options) "/challenge." domain ".url"))
+      (println (challenge/explain challenge (.getDomain (.getIdentifier auth)))))))
 
-(defn challenge [{domain :domain config-dir :config-dir :as options}]
-  (let [session (session options) 
-        frozen-challenges (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file (str config-dir domain))))
-        challenges (for [frozen-challenge frozen-challenges
-                         :let [uri (new URI (slurp frozen-challenge))]]
-                     (challenge/restore session uri))]
-    (doseq [challenge challenges]
-      (when (= "http-01" (.getType challenge))
-        (try (client/head (str "http://" domain  "/.well-known/acme-challenge/" (.getToken challenge)))
-             (catch Exception e (exit 1 (str "Please make sure you can respond to the challenges.\nError message: " (.getMessage e))))))) ;precheck
-    (for [challenge challenges]
+(defn accept-challenges [{:keys [domain config-dir acme-uri keypair-filename] :as options}]
+  (let [session (session/create acme-uri)
+        keypair (keypair/read config-dir keypair-filename)
+        login (account/login (str config-dir "account.url") keypair session)
+        paths (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file (str config-dir domain))))]     
+    (doseq [path paths
+            :let [challenge (challenge/restore login path)]]
       (challenge/accept challenge))))
-
 
 (defn get-certificate [{:keys [config-dir domain organisation san] :as options} reg]
   (let [path (str config-dir domain "/")

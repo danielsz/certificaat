@@ -6,7 +6,7 @@
             [certificaat.domain :refer [Certificaat]]
             [certificaat.utils :refer [load-url]]
             [clojure.string :as str])
-  (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge]
+  (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge TlsAlpn01Challenge]
            [org.shredzone.acme4j Status]
            [org.shredzone.acme4j.exception AcmeRetryAfterException AcmeServerException AcmeProtocolException]))
 
@@ -41,8 +41,12 @@
     "http-01" (http-01 challenge domain)
     "tls-alpn-01" (tls-alpn-01 challenge domain) ))
 
-(defn find [auth challenges]
-  (.findCombination auth (into-array String challenges)))
+(def enums {"dns-01" Dns01Challenge/TYPE
+            "http-01" Http01Challenge/TYPE
+            "tls-alpn-01" TlsAlpn01Challenge/TYPE})
+
+(defn find [auth type]
+  (.findChallenge auth (get enums type)))
 
 (extend-type Challenge
   Certificaat

@@ -1,6 +1,9 @@
 (ns certificaat.plugins.server
   (:require
-   [certificaat.kung-fu :as k]
+   [certificaat.acme4j.session :as session]
+   [certificaat.acme4j.keypair :as keypair]
+   [certificaat.acme4j.account :as account]
+   [certificaat.acme4j.challenge :as challenge]
    [immutant.web :refer [run stop]]
    [clojure.string :as str]
    [clojure.java.io :as io]
@@ -21,16 +24,24 @@
   (let [server (run handler {:port port})]
     server))
 
-(defn listen [challenges {{{port :port enabled :enabled} :httpd} :plugins :as options}]
-  (when enabled
-    (let [handler (handler challenges)]
-      (start-server handler port))))
+(defn get-challenges [{:keys [domain config-dir acme-uri keypair-filename] :as options}]
+  (let [session (session/create acme-uri)
+        keypair (keypair/read config-dir keypair-filename)
+        login (account/login (str config-dir "account.url") keypair session)
+        paths (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file (str config-dir domain))))]
+    (for [path paths
+          :let [challenge (challenge/restore login path)]]
+      challenge)))
 
-#_ (defn listen [{{{enabled :enabled} :httpd} :plugins config-dir :config-dir domain :domain :as options}]
-  (let [session (k/session options)
-        frozen-challenges (filter (comp #(= (first %) "challenge") #(str/split % #"\.") #(.getName %)) (file-seq (io/file (str config-dir domain))))]
-    (when enabled
-      (let [handler (partial handler "challenge")]
-        (start-server handler)))))
+(defn listen
+  ([options]
+   (let [challenges (get-challenges options)]
+     (listen challenges options)))
+  ([challenges {{{port :port enabled :enabled} :httpd} :plugins :as options}]
+              (when enabled
+                (let [handler (handler challenges)]
+                  (start-server handler port)))))
+
+
 
 

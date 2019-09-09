@@ -22,7 +22,7 @@
                                      (catch java.io.IOException e false))))
 (s/def ::san (s/coll-of ::domain :kind set?))
 (s/def ::organisation string?)
-(s/def ::challenge #{"http-01" "dns-01" "tls-sni-01" "tls-sni-02" "oob-01"})
+(s/def ::challenge #{"http-01" "dns-01" "tls-alpn-01"})
 (s/def ::challenges (s/coll-of ::challenge :kind set?))
 (s/def ::challenge-uri #(re-matches #"challenge\..*\.\d+\.url" %))
 (s/def ::authorization-url #(re-matches #"authorization\..*\.url" %))
