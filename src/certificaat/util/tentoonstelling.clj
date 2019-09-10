@@ -11,7 +11,7 @@
 (defmulti confirm-dialog (fn [title message] (GraphicsEnvironment/isHeadless)))
 (defmethod confirm-dialog true [title message] (let [_ (println (str message " " title " (Please type Yes or No)"))
                                                      option (read-line)]
-                                                 (when (not= "yes" (str/lower-case option))
+                                                 (when (not= (.beginsWith (str/lower-case option) "y"))
                                                    (throw (Exception. "User did not confirm")))))
 (defmethod confirm-dialog false [title message] (let [option (JOptionPane/showConfirmDialog nil message title JOptionPane/OK_CANCEL_OPTION)]
                                               (when (= option JOptionPane/CANCEL_OPTION)
