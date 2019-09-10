@@ -38,6 +38,7 @@
         "Usage: certificaat [options] action"
         "Examples: certificaat -m change.me run"
         "          certificaat -m change.me -n www.change.me run "
+        "          certificaat -m change.me -n *.change.me run "
         "          certificaat -m change.me -n www.change.me -n blog.change.me run "
         ""
         "Actions:"
@@ -85,7 +86,7 @@
       (exit (if ok? 0 1) exit-message)
       (case action
         "init"      (let [cli-options (validate ::domain/cli-options options)
-                          config-options (validate ::domain/config c/defaults)
+                          config-options (validate ::domain/config (c/read-config cli-options))
                           options (merge config-options cli-options)]
                       (c/setup options)
                       (k/account options))        
