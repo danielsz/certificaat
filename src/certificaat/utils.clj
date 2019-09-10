@@ -9,8 +9,7 @@
 
 (defn exit [status msg]
   (println msg)
-  ;(System/exit status)
-)
+  (System/exit status))
 
 (defn load-url [path]
   (let [url-resource (io/file path)]

@@ -32,7 +32,7 @@
                                             :next-state :find-authorizations}
                                            {:valid-when [#(k/valid? (str config-dir domain "/authorization." domain ".url") options)]
                                             :side-effect #(k/finalize-order)
-                                            :next-state nil}
+                                            :next-state :find-certificate}
                                            {:valid-when [#(k/invalid? (str config-dir domain "/authorization." domain ".url") options)]
                                             :side-effect #(log/warn "Authorization is invalid. Please reissue order")
                                             :next-state :find-order}

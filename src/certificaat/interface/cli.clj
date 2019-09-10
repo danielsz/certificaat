@@ -5,6 +5,7 @@
             [certificaat.utils :refer [exit error-msg]]
             [certificaat.util.configuration :as c]
             [certificaat.util.tentoonstelling :as t]
+            [certificaat.acme4j.certificate :refer [info]]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
@@ -42,9 +43,7 @@
         "          certificaat -m change.me -n www.change.me -n blog.change.me run "
         ""
         "Actions:"
-        "  init   Run once for domain and optional san (Subject Alternative Names)."
         "  run    Run multiple times until certificate is acquired"
-        "  cron   Renew certificate in cron jobs"
         "  info   Show certificate info (expiry date, etc.)"
         "  reset  Deletes data directory associated with domain and san"
         
@@ -80,35 +79,31 @@
       (s/valid? ::domain/cli-actions (first arguments)) {:action (first arguments) :options options}
       :else {:exit-message (usage summary)})))
 
+(defn init [options]
+  (let [cli-options (validate ::domain/cli-options options)
+        options (merge c/defaults cli-options)]
+    (c/setup options)))
+
 (defn certificaat [args]
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
-        "init"      (let [cli-options (validate ::domain/cli-options options)
+        "run"       (let [_ (init options)
+                          cli-options (validate ::domain/cli-options options)
                           config-options (validate ::domain/config (c/read-config cli-options))
                           options (merge config-options cli-options)]
-                      (c/setup options)
-                      (k/account options))        
-        "run"       (let [cli-options (validate ::domain/cli-options options)
-                          config-options (validate ::domain/config (c/read-config cli-options))
-                          options (merge config-options cli-options)]
-                      (when (> (:verbosity options) 0) (println options))
-                      (try
-                        (fsm/run options)
-                        (catch AcmeUnauthorizedException e (println (.getMessage e))))) 
+                      (when (> (:verbosity options) 0) (println options))                     
+                      (fsm/run options)) 
         "reset"     (let [options (validate ::domain/cli-options options)]
                       (try (t/confirm-dialog "Are you sure?" (str "This will delete everything under " (:config-dir options) (:domain options)))
                            (c/delete-domain-config-dir! options)
                            (catch Exception e (println (.getMessage e)))))
         "info" (let [cli-options (validate ::domain/cli-options options)
-                     config-options (validate ::domain/config (c/read-config options))]
-                  (puget/cprint (try
-                                        ;(k/info cli-options)
-                                  (catch java.io.FileNotFoundException e (.getMessage e))))
-                  (when (not (zero? (:verbosity options)))
-                    (puget/cprint config-options)))
-        "cron" (let [cli-options (validate ::domain/cli-options options)
                      config-options (validate ::domain/config (c/read-config options))
                      options (merge config-options cli-options)]
-                 (fsm/run options))))))
+                 (puget/cprint (try
+                                 (info options)
+                                 (catch java.io.FileNotFoundException e (.getMessage e))))
+                 (when (not (zero? (:verbosity options)))
+                   (puget/cprint config-options)))))))
