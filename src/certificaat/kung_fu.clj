@@ -19,56 +19,36 @@
            org.shredzone.acme4j.exception.AcmeUnauthorizedException
            org.shredzone.acme4j.Status))
 
-(defn valid? [path {:keys [config-dir keypair-filename acme-uri] :as options}]
+(defn restore [path {:keys [config-dir keypair-filename acme-uri] :as options}]
   (let [session (session/create acme-uri)
         keypair (keypair/read config-dir keypair-filename)
         login (account/login (str config-dir "account.url") keypair session)]
     (condp s/valid? (.getName (io/as-file path))
       ::d/account-url (when (.exists (io/file path))
-                        (let [account (account/restore session keypair)]
-                          (d/valid? account)))
+                        (account/restore session keypair))
       ::d/order-url (when (.exists (io/file path))
-                      (let [order (order/restore login path)]
-                        (d/valid? order)))
+                      (order/restore login path))
       ::d/authorization-url (when (.exists (io/file path))
-                              (let [authorization (authorization/restore login path)]
-                                (d/valid? authorization)))
+                              (authorization/restore login path))
       ::d/certificate-url (when (.exists (io/file path))
-                           (let [certificate (certificate/restore login path)]
-                             (d/valid? certificate))))))
+                           (certificate/restore login path)))))
 
-(defn invalid? [path {:keys [config-dir keypair-filename acme-uri] :as options}]
-  (let [session (session/create acme-uri)
-        keypair (keypair/read config-dir keypair-filename)
-        login (account/login (str config-dir "account.url") keypair session)]
-    (condp s/valid? (.getName (io/as-file path))
-      ::d/account-url (when (.exists (io/file path))
-                        (let [account (account/restore session keypair)]
-                          (d/invalid? account)))
-      ::d/order-url (when (.exists (io/file path))
-                      (let [order (order/restore login path)]
-                        (d/invalid? order)))
-      ::d/authorization-url (when (.exists (io/file path))
-                              (let [authorization (authorization/restore login path)]
-                                (d/invalid? authorization)))
-      ::d/certificate-url (when (.exists (io/file path))
-                           (let [certificate (certificate/restore login path)]
-                             (d/invalid? certificate))))))
+(defn valid? [path options]
+  (when-let [resource (restore path options)]
+    (d/valid? resource)))
 
-(defn pending? [path {:keys [config-dir keypair-filename acme-uri] :as options}]
-  (let [session (session/create acme-uri)
-        keypair (keypair/read config-dir keypair-filename)
-        login (account/login (str config-dir "account.url") keypair session)]
-    (condp s/valid? (.getName (io/as-file path))
-      ::d/order-url (when (.exists (io/file path))
-                      (let [order (order/restore login path)]
-                        (d/pending? order)))
-      ::d/authorization-url (when (.exists (io/file path))
-                              (let [authorization (authorization/restore login path)]
-                                (d/pending? authorization)))
-      ::d/certificate-url (when (.exists (io/file path))
-                            (let [certificate (certificate/restore login path)]
-                             (d/pending? certificate))))))
+(defn invalid? [path options]
+  (when-let [resource (restore path options)]
+    (d/invalid? resource)))
+
+(defn ready? [path options]
+  (when-let [resource (restore path options)]
+    (d/ready? resource)))
+
+(defn pending? [path options]
+  (when-let [resource (restore path options)]
+    (d/pending? resource)))
+
 
 (defn account [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
   (if-let [account-url (load-url (str config-dir "account.url"))]

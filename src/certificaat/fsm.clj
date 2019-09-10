@@ -42,17 +42,17 @@
                      :find-order [{:valid-when [#(k/pending? (str config-dir domain "/order.url") options)]
                                    :side-effect #(k/authorize options)
                                    :next-state :find-authorizations}
+                                  {:valid-when [#(k/ready? (str config-dir domain "/order.url") options)]
+                                   :side-effect #(k/authorize options)
+                                   :next-state :find-authorizations}
                                   {:valid-when [#(k/invalid? (str config-dir domain "/order.url") options)]
                                    :side-effect #(log/warn "Order is invalid. We should delete serialized order")
                                    :next-state nil}
                                   {:valid-when []
                                    :side-effect #(do)
                                    :next-state :find-account}]
-                     :find-account [{:valid-when [#(k/valid? (str config-dir domain "/account.url") options)]
-                                     :side-effect #(do) 
-                                     :next-state :find-order}
-                                    {:valid-when []
-                                     :side-effect #(k/order options)
+                     :find-account [{:valid-when [#(k/valid? (str config-dir "/account.url") options)]
+                                     :side-effect #(k/order options) 
                                      :next-state :find-order}]}
         sm (state-machine state-table :find-certificate)]
     (target-state sm)))

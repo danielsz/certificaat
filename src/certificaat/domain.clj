@@ -52,6 +52,8 @@
   (deactivated? [this])
   (expired? [this])
   (revoked? [this])
+  (ready? [this])
+  (processing? [this])
   (marshal [this path]))
 
 (def realms (-> (make-hierarchy)

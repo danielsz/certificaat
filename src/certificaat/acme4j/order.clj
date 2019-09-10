@@ -25,6 +25,12 @@
   (pending? [this]
     (log/debug "Order status:" (.getStatus this))
     (= Status/PENDING (.getStatus this)))
+  (ready? [this]
+    (log/debug "Order status:" (.getStatus this))
+    (= Status/READY (.getStatus this)))
+  (processus? [this]
+    (log/debug "Order status:" (.getStatus this))
+    (= Status/PROCESSING (.getStatus this)))
   (invalid? [this]
     (log/debug "Order status:" (.getStatus this))
     (= Status/INVALID (.getStatus this)))
