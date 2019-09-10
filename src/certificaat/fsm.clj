@@ -13,13 +13,10 @@
 
 
 (defn run [{config-dir :config-dir domain :domain :as options}]
-  (let [state-table {:find-certificate [{:valid-when [#(k/valid? (str config-dir domain "/certificate.url") options)]
-                                         :side-effect #(exit 0 "Nothing left to do at this point in time.")
-                                         :next-state nil}
-                                        {:valid-when [#(k/valid? (str config-dir domain "/order.url") options)]
+  (let [state-table {:find-certificate [{:valid-when [#(k/valid? (str config-dir domain "/order.url") options)]
                                          :side-effect #(do (k/get-certificate options)
                                                            (config/cleanup! options))
-                                         :next-state :find-certificate}
+                                         :next-state nil}
                                         {:valid-when []
                                          :side-effect #(do)
                                          :next-state :find-authorizations}]                     
