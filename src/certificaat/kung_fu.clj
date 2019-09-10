@@ -163,12 +163,6 @@
     (d/marshal cert (str config-dir domain "/cert.url"))
     (log/info "Well done! You will find your certificate chain in" (str config-dir domain "/"))))
 
+(defn hooks-enabled? [hooks]
+  (some (fn [[k v]] (:enabled v)) hooks))
 
-(defn request-certificate [{config-dir :config-dir domain :domain :as options} reg]
-  (let [path (str config-dir domain "/")
-        cert (get-certificate options reg)]
-    (certificate/persist (str path "domain-chain.crt") cert)
-    (spit (str path "certificate.url") (.getLocation cert))
-    (log/info "Well done! You will find your certificate chain in" path)))
-
-(def explain challenge/explain)

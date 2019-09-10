@@ -1,6 +1,6 @@
 (ns certificaat.interface.cli
   (:require [certificaat.domain :as domain]
-            [certificaat.fsm :as f]
+            [certificaat.fsm :as fsm]
             [certificaat.kung-fu :as k]
             [certificaat.utils :refer [exit error-msg]]
             [certificaat.util.configuration :as c]
@@ -19,9 +19,9 @@
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."
     :default (:config-dir c/defaults)
     :validate [#(s/valid? ::domain/config-dir %) "Must be a string"]]
-   ["-m" "--domain DOMAIN" "The domain you wish to authorize"
+   ["-m" "--domain DOMAIN" "The domain you wish to authorize. Can be a wildcard domain."
     :validate [#(s/valid? ::domain/domain %) "Must be a valid domain"]]
-   ["-n" "--san SAN" "Subject Alternative Name. Additional domain to be authorized. You can repeat this option."
+   ["-n" "--san SAN" "Subject Alternative Name. Additional domain to be authorized. Can be a wildcard domain. You can repeat this option."
     :parse-fn #(set [%])
     :assoc-fn (fn [m k v] (update-in m [k] #(into #{} (set/union % v))))
     :validate [#(s/valid? ::domain/san %) "Must be a valid domain"]]
@@ -87,13 +87,14 @@
         "init"      (let [cli-options (validate ::domain/cli-options options)
                           config-options (validate ::domain/config c/defaults)
                           options (merge config-options cli-options)]
-                      (f/setup options))
+                      (c/setup options)
+                      (k/account options))        
         "run"       (let [cli-options (validate ::domain/cli-options options)
                           config-options (validate ::domain/config (c/read-config cli-options))
                           options (merge config-options cli-options)]
                       (when (> (:verbosity options) 0) (println options))
                       (try
-                        (f/run options)
+                        (fsm/run options)
                         (catch AcmeUnauthorizedException e (println (.getMessage e))))) 
         "reset"     (let [options (validate ::domain/cli-options options)]
                       (try (t/confirm-dialog "Are you sure?" (str "This will delete everything under " (:config-dir options) (:domain options)))
@@ -102,11 +103,11 @@
         "info" (let [cli-options (validate ::domain/cli-options options)
                      config-options (validate ::domain/config (c/read-config options))]
                   (puget/cprint (try
-                                  (k/info cli-options)
+                                        ;(k/info cli-options)
                                   (catch java.io.FileNotFoundException e (.getMessage e))))
                   (when (not (zero? (:verbosity options)))
                     (puget/cprint config-options)))
         "cron" (let [cli-options (validate ::domain/cli-options options)
                      config-options (validate ::domain/config (c/read-config options))
                      options (merge config-options cli-options)]
-                 (f/renew options))))))
+                 (fsm/run options))))))

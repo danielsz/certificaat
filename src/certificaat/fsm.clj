@@ -17,7 +17,8 @@
                                          :side-effect #(exit 0 "Nothing left to do at this point in time.")
                                          :next-state nil}
                                         {:valid-when [#(k/valid? (str config-dir domain "/order.url") options)]
-                                         :side-effect #(k/get-certificate options)
+                                         :side-effect #(do (k/get-certificate options)
+                                                           (config/cleanup! options))
                                          :next-state :find-certificate}
                                         {:valid-when []
                                          :side-effect #(do)
@@ -25,7 +26,9 @@
                      :find-authorizations [{:valid-when [#(k/pending? (str config-dir domain "/authorization." domain ".url") options)]
                                             :side-effect #(do (k/challenge options)
                                                               (hooks/run :before-challenge options)
-                                                              (k/accept-challenges options))
+                                                              (if (k/hooks-enabled? (select-keys (:plugins options) [:webroot :httpd]))
+                                                                (k/accept-challenges options)
+                                                                (exit 1 "Are you ready to accept the challenges?")))
                                             :next-state :find-authorizations}
                                            {:valid-when [#(k/valid? (str config-dir domain "/authorization." domain ".url") options)]
                                             :side-effect #(k/finalize-order)

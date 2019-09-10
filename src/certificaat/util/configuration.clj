@@ -66,6 +66,13 @@
       (io/delete-file file))
     (io/delete-file dir-path)))
 
+(defn cleanup! [{config-dir :config-dir domain :domain}]
+  (let [dir-path (io/file  (str config-dir domain))
+        dir-listing (.listFiles dir-path)
+        files (filter #(and (.isFile %) (.endsWith (str %) ".url")) dir-listing)]
+    (doseq [file files]
+      (io/delete-file file))))
+
 (defn save-agreement [config-dir reg]
   (let [url (.getAgreement reg)
         agreement (d/download (str url))

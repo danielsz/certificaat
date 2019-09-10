@@ -1,5 +1,5 @@
 {:pom
- {:group-id "certificaat",
+ {:group-id "org.danielsz",
   :artifact-id "certificaat",
   :version "2.0.3",
   :name "certificaat"},

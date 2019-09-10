@@ -51,7 +51,7 @@
 (use-fixtures :once setup)
 
 (deftest session-kung-fu
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         metadata (.getMetadata session)]
     (is (= org.shredzone.acme4j.Session (type session)))
     (is (= org.shredzone.acme4j.Metadata (type metadata)))
@@ -69,7 +69,7 @@
     (is (false? (.isExternalAccountRequired metadata)))))
 
 (deftest account-creation
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         contact (:contact options)
         account (account/create session keypair contact :with-login false)]
@@ -77,7 +77,7 @@
     (is (= java.net.URL (type (.getLocation account))))))
 
 (deftest account-location
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)]
     (marshal account (str (:config-dir options) "/account.url"))
@@ -85,7 +85,7 @@
     (is (= java.net.URL (type (.getLocation account))))))
 
 (deftest login-at-account-creation
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         contact (:contact options)
         login (account/create session keypair contact :with-login true)]    
@@ -93,7 +93,7 @@
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 
 (deftest login
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
         account-location (.getLocation account)
@@ -102,7 +102,7 @@
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 
 (deftest login-constructor
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
         login (org.shredzone.acme4j.Login. (.getLocation account) keypair session)]
@@ -110,14 +110,14 @@
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 
 (deftest login-method
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         login (account/login (str (:config-dir options) "/account.url") keypair session)]
     (is (= org.shredzone.acme4j.Login (type login)))
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 
 (deftest order
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
@@ -127,7 +127,7 @@
     (is (= org.shredzone.acme4j.Order (type (.create order-builder))))))
 
 (deftest resource-binding-order
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/restore session keypair)
         login (.login session (.getLocation account) keypair)
@@ -143,7 +143,7 @@
     (is (= org.shredzone.acme4j.Order (type (.bindOrder login (load-url url-path)))))))
 
 (deftest authorization
-  (let  [session (kung-fu/session options)
+  (let  [session (session/create (:acme-uri options))
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          login (account/login (str (:config-dir options) "/account.url") keypair session)
          order (order/restore login (str (:config-dir options) (:domain options) "/order.url"))]
@@ -153,7 +153,7 @@
       (is (some #{status} [org.shredzone.acme4j.Status/PENDING org.shredzone.acme4j.Status/VALID])))))
 
 (deftest resource-binding-authorization
-  (let  [session (kung-fu/session options)
+  (let  [session (session/create (:acme-uri options))
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          account (account/read session keypair)
          account-location (.getLocation account)
@@ -166,7 +166,7 @@
       (is (= (.getLocation auth) (.getLocation (.bindAuthorization login auth-url)))))))
 
 (deftest challenges
-  (let  [session (kung-fu/session options)
+  (let  [session (session/create (:acme-uri options))
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          account (account/read session keypair)
          domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
@@ -178,7 +178,7 @@
       (is (some #{org.shredzone.acme4j.challenge.TlsAlpn01Challenge} (map type challenges))))))
 
 (deftest challenge-http-01
-  (let  [session (kung-fu/session options)
+  (let  [session (session/create (:acme-uri options))
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
          account (account/read session keypair)
          domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
@@ -194,7 +194,7 @@
 
 (deftest process-challenge-http-01
   (testing "sudo socat tcp-listen:80,reuseaddr,fork tcp:localhost:3010"
-    (let  [session (kung-fu/session options)
+    (let  [session (session/create (:acme-uri options))
            keypair (keypair/read (:config-dir options) (:keypair-filename options))
            account (account/restore session keypair)
            domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
@@ -212,7 +212,7 @@
 
 (deftest trigger-challenge-http-01
   (testing "sudo socat tcp-listen:80,reuseaddr,fork tcp:localhost:3010"
-    (let  [session (kung-fu/session options)
+    (let  [session (session/create (:acme-uri options))
            keypair (keypair/read (:config-dir options) (:keypair-filename options))
            account (account/read session keypair)
            domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
@@ -229,7 +229,7 @@
       (server/stop-server server))))
 
 (deftest finalize-order
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
@@ -243,7 +243,7 @@
     (is (= true (valid? order)))))
 
 (deftest certificate
-  (let [session (kung-fu/session options)
+  (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
         login (.login session (.getLocation account) keypair)
