@@ -50,8 +50,8 @@
         account-file (io/file (str config-dir "config.edn"))
         domain-content (into {} (filter (fn [[k v]] (isa? domain/realms k ::domain/domain)) options))
         account-content (into {} (filter (fn [[k v]] (isa? domain/realms k ::domain/account)) options))]
-    (write-config domain-file domain-content)
-    (write-config account-file account-content)))
+    (write-config account-file account-content)
+    (write-config domain-file domain-content)))
 
 (defn read-config [{config-dir :config-dir domain :domain}]
   (let [account-config (read-string (slurp (str config-dir "/config.edn")))
@@ -85,6 +85,6 @@
         domain-keypair (keypair/create key-type key-size)
         account-path (str config-dir keypair-filename) 
         domain-path (str config-dir domain "/domain.key")]
+    (add-config options)
     (add-keypair account-path account-keypair)
-    (add-keypair domain-path domain-keypair)
-    (add-config options)))
+    (add-keypair domain-path domain-keypair)))

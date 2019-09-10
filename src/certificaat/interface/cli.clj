@@ -93,7 +93,8 @@
                           cli-options (validate ::domain/cli-options options)
                           config-options (validate ::domain/config (c/read-config cli-options))
                           options (merge config-options cli-options)]
-                      (when (> (:verbosity options) 0) (println options))                     
+                      (when (> (:verbosity options) 0) (println options))
+                      (k/account options)
                       (fsm/run options)) 
         "reset"     (let [options (validate ::domain/cli-options options)]
                       (try (t/confirm-dialog "Are you sure?" (str "This will delete everything under " (:config-dir options) (:domain options)))

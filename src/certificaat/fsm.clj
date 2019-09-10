@@ -52,10 +52,7 @@
                                      :side-effect #(do) 
                                      :next-state :find-order}
                                     {:valid-when []
-                                     :side-effect #(do
-                                                     (config/setup options)
-                                                     (k/account options)
-                                                     (k/order options))
+                                     :side-effect #(k/order options)
                                      :next-state :find-order}]}
         sm (state-machine state-table :find-certificate)]
     (target-state sm)))
