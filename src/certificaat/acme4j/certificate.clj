@@ -30,7 +30,7 @@
     (CertificateUtils/readCSR input)))
 
 (defn persist [cert path]
-  (let [fw (FileWriter. path)]
+  (let [fw (FileWriter. (io/file path))]
     (.writeCertificate cert fw)))
 
 (defn restore [login path]
@@ -54,7 +54,7 @@
 (defn info
   ([{config-dir :config-dir domain :domain}]
    (let [path (str config-dir domain "/")
-         cert-file (str path "domain-chain.crt")
+         cert-file (str path "cert-chain.crt")
          key-file (str path "domain.key")]
     (info cert-file key-file)))
   ([cert-file key-file]
@@ -76,9 +76,9 @@
 
 (extend-type Certificate
   Certificaat
-  (valid? [this] (let [cert (.download this)]
-                   (log/info "Certificate expires after" (.getNotAfter cert))
-                   (try (.checkValidity cert)
+  (valid? [this] (let [X509Certificate (.getCertificate this)]
+                   (log/info "Certificate expires after" (.getNotAfter X509Certificate))
+                   (try (.checkValidity X509Certificate)
                         true
                         (catch CertificateExpiredException e false)
                         (catch CertificateNotYetValidException e false))))

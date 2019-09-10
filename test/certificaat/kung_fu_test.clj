@@ -256,7 +256,7 @@
         X509Certificate (.getCertificate cert)
         chain (.getCertificateChain cert)]
     (is (= org.shredzone.acme4j.Certificate (type cert)))
-    (certificate/persist cert (str (:config-dir options) (:domain options) "/domain-chain.crt"))
+    (certificate/persist cert (str (:config-dir options) (:domain options) "/cert-chain.crt"))
     (.checkValidity X509Certificate)
     (d/marshal cert (str (:config-dir options) (:domain options) "/cert.url"))
     (is (pos? (.compareTo (.getNotAfter X509Certificate) (Date/from (Instant/now)))))))

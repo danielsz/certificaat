@@ -138,7 +138,7 @@
         cert (.getCertificate order)
         X509Certificate (.getCertificate cert)
         chain (.getCertificateChain cert)]
-    (certificate/persist cert (str config-dir domain "/domain-chain.crt"))
+    (certificate/persist cert (str config-dir domain "/cert-chain.crt"))
     (.checkValidity X509Certificate)
     (d/marshal cert (str config-dir domain "/cert.url"))
     (log/info "Well done! You will find your certificate chain in" (str config-dir domain "/"))))
