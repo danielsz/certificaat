@@ -6,10 +6,10 @@
             [environ.core :refer [env]]
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j Certificate RevocationReason]
-           [org.shredzone.acme4j.util CSRBuilder CertificateUtils]
-           [org.shredzone.acme4j.util KeyPairUtils]
-           [java.security.cert CertificateExpiredException CertificateNotYetValidException]
-           [java.io FileWriter FileReader]))
+           [org.shredzone.acme4j.util KeyPairUtils CSRBuilder CertificateUtils]
+           [java.security.cert CertificateExpiredException CertificateNotYetValidException CertificateFactory]
+           [org.bouncycastle.util.io.pem PemReader]
+           [java.io FileWriter FileReader ByteArrayInputStream]))
 
 (defn prepare [keypair domain organization & additional-domains]
   (let [builder (CSRBuilder.)]
@@ -52,6 +52,15 @@
   [cert key]
   (= (.getModulus (.getPublicKey cert)) (.getModulus (.getPrivate key))))
 
+(defn read-csr [file]
+  (CertificateUtils/readCSR (io/input-stream file)))
+
+(defn read-pem [file]
+  (let [crt (FileReader. file)
+        x509data (.getContent (.readPemObject (PemReader. crt)))
+        factory (CertificateFactory/getInstance "X509")]
+    (.generateCertificate factory (ByteArrayInputStream. x509data))))
+
 (defn info
   ([{config-dir :config-dir domain :domain}]
    (let [path (str config-dir domain "/")
@@ -59,7 +68,7 @@
          key-file (str path "domain.key")]
     (info cert-file key-file)))
   ([cert-file key-file]
-   (let [cert (CertificateUtils/readCSR (io/input-stream cert-file))
+   (let [cert (read-pem cert-file)
          issuer (.getIssuerX500Principal cert)
          subject (.getSubjectX500Principal cert)
          info {:issuer (.getName issuer)
