@@ -28,7 +28,7 @@
   (ready? [this]
     (log/debug "Order status:" (.getStatus this))
     (= Status/READY (.getStatus this)))
-  (processus? [this]
+  (processing? [this]
     (log/debug "Order status:" (.getStatus this))
     (= Status/PROCESSING (.getStatus this)))
   (invalid? [this]
