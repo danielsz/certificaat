@@ -30,8 +30,9 @@
     (CertificateUtils/readCSR input)))
 
 (defn persist [cert path]
-  (let [fw (FileWriter. (io/file path))]
-    (.writeCertificate cert fw)))
+  (let [fw (FileWriter. path)]
+    (.writeCertificate cert fw)
+    (.flush fw)))
 
 (defn restore [login path]
   (.bindCertificate login (load-url path)))
