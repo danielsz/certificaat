@@ -76,17 +76,15 @@
                 (<!! (a/timeout (or ms 5000)))
                 (log/debug "Retrieving challenge status, attempt" y ms)
                 (cond
-                  (d/valid? challenge) "Valid"
+                  (d/valid? challenge) (str "Valid after" y "attempts")
                   (d/invalid? challenge) (do (log/error (.getError challenge))
-                                             "Invalid")
-                  (d/processing? challenge) "Processing"
-                  (d/pending? challenge) "Pending"
-                  (> y 10) status
-                  :else (recur (inc y) (try
-                                         (.update challenge)
-                                         (catch AcmeRetryAfterException e
-                                           (log/error (.getMessage e))
-                                           (.getRetryAfter e)))))))))
+                                             "Invalid after" y "attempts")
+                  (> y 10) "Too many attempts"
+                  (or (d/processing? challenge) (d/pending? challenge)) (recur (inc y) (try
+                                                                                         (.update challenge)
+                                                                                         (catch AcmeRetryAfterException e
+                                                                                           (log/error (.getMessage e))
+                                                                                           (.getRetryAfter e)))))))))
 
 
 
