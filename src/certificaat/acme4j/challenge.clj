@@ -76,7 +76,7 @@
                 (<!! (a/timeout (or ms 5000)))
                 (log/debug "Retrieving challenge status, attempt" y ms)
                 (cond
-                  (d/valid? challenge) (str "Valid after" y "attempts")
+                  (d/valid? challenge) (str "Valid after " y " attempts")
                   (d/invalid? challenge) (do (log/error (.getError challenge))
                                              "Invalid after" y "attempts")
                   (> y 10) "Too many attempts"
