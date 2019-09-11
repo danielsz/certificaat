@@ -4,7 +4,8 @@
             [clojure.tools.logging :as log]
             [certificaat.acme4j.keypair :as keypair]
             [certificaat.domain :refer [Certificaat]]
-            [certificaat.utils :refer [load-url]])
+            [certificaat.utils :refer [load-url]]
+            [clojure.string :as str])
   (:import
    [org.shredzone.acme4j Account AccountBuilder Login Status]
    [org.shredzone.acme4j.exception AcmeProtocolException]))

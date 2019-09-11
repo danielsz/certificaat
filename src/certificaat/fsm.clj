@@ -50,10 +50,11 @@
                                   {:valid-when []
                                    :side-effect #(do)
                                    :next-state :find-account}]
-                     :find-account [{:valid-when [#(k/valid? (str config-dir "/account.url") options)]
+                     :find-account [{:valid-when [#(k/valid? (k/account-path options) options)]
                                      :side-effect #(k/order options) 
                                      :next-state :find-order}]}
         sm (state-machine state-table :find-certificate)]
     (target-state sm)))
+
 
 

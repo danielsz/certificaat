@@ -82,7 +82,7 @@
   (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)]
-    (marshal account (str (:config-dir options) "/account.url"))
+    (marshal account (kung-fu/account-path options))
     (is (= org.shredzone.acme4j.Account (type account)))
     (is (= java.net.URL (type (.getLocation account))))))
 
@@ -114,7 +114,7 @@
 (deftest login-method
   (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
-        login (account/login (str (:config-dir options) "/account.url") keypair session)]
+        login (kung-fu/login keypair session options)]
     (is (= org.shredzone.acme4j.Login (type login)))
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 
@@ -147,7 +147,7 @@
 (deftest authorization
   (let  [session (session/create (:acme-uri options))
          keypair (keypair/read (:config-dir options) (:keypair-filename options))
-         login (account/login (str (:config-dir options) "/account.url") keypair session)
+         login (kung-fu/login keypair session options)
          order (order/restore login (str (:config-dir options) (:domain options) "/order.url"))]
     (doseq [auth (.getAuthorizations order)
             :let [status (.getStatus auth)]]

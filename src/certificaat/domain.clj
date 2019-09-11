@@ -26,7 +26,7 @@
 (s/def ::challenge-url #(re-matches #"challenge\..*\.url" %))
 (s/def ::authorization-url #(re-matches #"authorization\..*\.url" %))
 (s/def ::order-url #(re-matches #"order.url" %))
-(s/def ::account-url #(re-matches #"account.url" %))
+(s/def ::account-url #(re-matches #".*account.url" %))
 (s/def ::certificate-url #(re-matches #"certificate.url" %))
 
 (s/def ::hook #{:before-challenge :after-request})
