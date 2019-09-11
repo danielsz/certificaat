@@ -20,7 +20,7 @@
   [["-d" "--config-dir CONFIG-DIR" "The configuration directory for certificaat. Default follows XDG folders convention."
     :default (:config-dir c/defaults)
     :validate [#(s/valid? ::domain/config-dir %) "Must be a string"]]
-   ["-m" "--domain DOMAIN" "The domain you wish to authorize. Can be a wildcard domain."
+   ["-m" "--domain DOMAIN" "The domain you wish to authorize."
     :validate [#(s/valid? ::domain/domain %) "Must be a valid domain"]]
    ["-n" "--san SAN" "Subject Alternative Name. Additional domain to be authorized. Can be a wildcard domain. You can repeat this option."
     :parse-fn #(set [%])

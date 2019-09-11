@@ -49,15 +49,11 @@
     (d/pending? resource)))
 
 (defn account [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
-  (if-let [account-url (load-url (str config-dir "account.url"))]
-    (let [session (session/create acme-uri)
-          keypair (keypair/read config-dir keypair-filename)]
-      (account/read session keypair))
+  (when-not (.exists (io/file (str config-dir "account.url")))
     (let [session (session/create acme-uri)
           keypair (keypair/read config-dir keypair-filename)
           account (account/create session keypair contact :with-login false)]
-      (d/marshal account (str config-dir "account.url"))
-      account)))
+      (d/marshal account (str config-dir "account.url")))))
 
 
 (defn order [{:keys [config-dir keypair-filename acme-uri domain san] :as options}]
