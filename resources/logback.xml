@@ -14,5 +14,5 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
-  <logger name="org.jose4j.jwe" level="INFO"/>
+  <logger name="org.jose4j.jwa" level="INFO"/>
 </configuration>
