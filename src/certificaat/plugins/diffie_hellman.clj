@@ -1,4 +1,4 @@
-(ns certificaat.util.diffie-hellman
+(ns certificaat.plugins.diffie-hellman
   (:require [clojure.string :as str]
             [clojure.java.io :as io])
   (:import (java.security AlgorithmParameters AlgorithmParameterGenerator SecureRandom)
