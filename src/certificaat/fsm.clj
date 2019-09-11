@@ -16,7 +16,8 @@
   (let [state-table {:find-certificate [{:valid-when [#(k/valid? (str config-dir domain "/order.url") options)]
                                          :side-effect #(do (k/get-certificate options)
                                                            (config/cleanup! options)
-                                                           (hooks/run :after-request options))
+                                                           (hooks/run :after-request options)
+                                                           (exit 0 "All done."))
                                          :next-state nil}
                                         {:valid-when []
                                          :side-effect #(do)
