@@ -86,7 +86,8 @@
          order (order/restore login (str config-dir domain "/order.url"))]
     (doseq [auth (.getAuthorizations order)
             :let [challenge (challenge/find auth (first (:challenges options)))
-                  domain (.getDomain (.getIdentifier auth))]]
+                  domain (.getDomain (.getIdentifier auth))]
+            :when (not (.isWildcard auth))]
       (d/marshal challenge (str config-dir (:domain options) "/challenge." domain ".url"))
       (println (challenge/explain challenge (.getDomain (.getIdentifier auth)))))))
 
