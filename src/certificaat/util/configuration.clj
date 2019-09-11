@@ -16,7 +16,7 @@
                :san #{}
                :organisation "ChangeMe corporation"
                :contact "mailto:admin@change.me"
-               :challenges #{"http-01"}
+               :challenge-type "http-01"
                :plugins {:webroot {:enabled false
                                    :path "/tmp"}
                          :httpd {:enabled false

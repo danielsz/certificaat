@@ -75,41 +75,37 @@
          keypair (keypair/read config-dir  keypair-filename)
          login (account/login (str (:config-dir options) "/account.url") keypair session)
          order (order/restore login (str (:config-dir options) (:domain options) "/order.url"))]
-    (doseq [auth (.getAuthorizations order)
-            :when (not (.isWildcard auth))]
+    (doseq [auth (.getAuthorizations order)]
       (d/marshal auth (str (:config-dir options) (:domain options) "/authorization." (.getDomain (.getIdentifier auth)) ".url")))))
 
-(defn challenge [{:keys [config-dir keypair-filename acme-uri domain] :as options}]
+(defn challenge [{:keys [config-dir keypair-filename acme-uri domain challenge-type] :as options}]
   (let  [session (session/create acme-uri)
          keypair (keypair/read config-dir keypair-filename)
          login (account/login (str config-dir "account.url") keypair session)
          order (order/restore login (str config-dir domain "/order.url"))]
     (doseq [auth (.getAuthorizations order)
-            :let [challenge (challenge/find auth (first (:challenges options)))
-                  domain (.getDomain (.getIdentifier auth))]
-            :when (not (.isWildcard auth))]
+            :let [challenge (challenge/find auth challenge-type)
+                  domain (.getDomain (.getIdentifier auth))]]
       (d/marshal challenge (str config-dir (:domain options) "/challenge." domain ".url"))
       (println (challenge/explain challenge (.getDomain (.getIdentifier auth)))))))
 
 
-(defn get-challenges [{:keys [domain config-dir acme-uri keypair-filename] :as options}]
+(defn get-challenges [{:keys [domain config-dir acme-uri keypair-filename challenge-type] :as options}]
   (let [session (session/create acme-uri)
         keypair (keypair/read config-dir keypair-filename)
         login (account/login (str config-dir "account.url") keypair session)
         order (order/restore login (str config-dir domain "/order.url"))]
     (for [auth (.getAuthorizations order)
-          :when (not (.isWildcard auth))
-          :let [challenge (challenge/find auth (first (:challenges options)))]]
+          :let [challenge (challenge/find auth challenge-type)]]
       challenge)))
 
-(defn accept-challenges [{:keys [domain config-dir acme-uri keypair-filename] :as options}]
+(defn accept-challenges [{:keys [domain config-dir acme-uri keypair-filename challenge-type] :as options}]
   (let [session (session/create acme-uri)
         keypair (keypair/read config-dir keypair-filename)
         login (account/login (str config-dir "account.url") keypair session)
         order (order/restore login (str config-dir domain "/order.url"))]     
     (doseq [auth (.getAuthorizations order)
-            :when (not (.isWildcard auth))
-            :let [challenge (challenge/find auth (first (:challenges options)))]]
+            :let [challenge (challenge/find auth challenge-type)]]
       (log/debug "Channel returned:" (<!! (challenge/accept challenge))))))
 
 

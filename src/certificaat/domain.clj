@@ -22,8 +22,7 @@
                                      (catch java.io.IOException e false))))
 (s/def ::san (s/coll-of ::domain :kind set?))
 (s/def ::organisation string?)
-(s/def ::challenge #{"http-01" "dns-01" "tls-alpn-01"})
-(s/def ::challenges (s/coll-of ::challenge :kind set?))
+(s/def ::challenge-type #{"http-01" "dns-01" "tls-alpn-01"})
 (s/def ::challenge-url #(re-matches #"challenge\..*\.url" %))
 (s/def ::authorization-url #(re-matches #"authorization\..*\.url" %))
 (s/def ::order-url #(re-matches #"order.url" %))
@@ -42,7 +41,7 @@
 
 (s/def ::cli-actions #{"init" "run" "config" "reset" "info" "cron"})
 (s/def ::cli-options (s/keys :req-un [::config-dir ::domain]))
-(s/def ::config (s/keys :req-un [::acme-uri ::domain ::challenges ::contact ::plugins]
+(s/def ::config (s/keys :req-un [::acme-uri ::domain ::challenge-type ::contact ::plugins]
                         :opt-un [::san]))
 
 (defprotocol Certificaat
@@ -66,5 +65,5 @@
                 (derive :domain ::domain)
                 (derive :san ::domain)
                 (derive :organisation ::domain)
-                (derive :challenges ::domain)
+                (derive :challenge-type ::domain)
                 (derive :plugins ::domain)))
