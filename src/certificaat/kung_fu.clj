@@ -98,6 +98,7 @@
         login (account/login (str config-dir "account.url") keypair session)
         order (order/restore login (str config-dir domain "/order.url"))]
     (for [auth (.getAuthorizations order)
+          :when (not (.isWildcard auth))
           :let [challenge (challenge/find auth (first (:challenges options)))]]
       challenge)))
 
@@ -107,6 +108,7 @@
         login (account/login (str config-dir "account.url") keypair session)
         order (order/restore login (str config-dir domain "/order.url"))]     
     (doseq [auth (.getAuthorizations order)
+            :when (not (.isWildcard auth))
             :let [challenge (challenge/find auth (first (:challenges options)))]]
       (log/debug "Channel returned:" (<!! (challenge/accept challenge))))))
 
