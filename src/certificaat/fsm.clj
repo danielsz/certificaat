@@ -26,7 +26,7 @@
                                                               (hooks/run :before-challenge options)
                                                               (if (k/hooks-enabled? (select-keys (:plugins options) [:webroot :httpd]))
                                                                 (k/accept-challenges options)
-                                                                (exit 1 "Are you ready to accept the challenges?")))
+                                                                (exit 0 "Are you ready to accept the challenges? Please enable a plugin.")))
                                             :next-state :find-authorizations}
                                            {:valid-when [#(k/valid? (str config-dir domain "/authorization." domain ".url") options)]
                                             :side-effect #(k/finalize-order options)

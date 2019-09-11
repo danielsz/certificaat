@@ -8,7 +8,7 @@
             [clojure.string :as str])
   (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge TlsAlpn01Challenge]
            [org.shredzone.acme4j Status]
-           [org.shredzone.acme4j.exception AcmeRetryAfterException AcmeServerException AcmeProtocolException]))
+           [org.shredzone.acme4j.exception AcmeException AcmeRetryAfterException AcmeServerException AcmeProtocolException]))
 
 (defn tls-alpn-01 [challenge domain]
   (->> ["With the tls-alpn-01 challenge, you prove to the CA that you are able to control the web server of the domain to be authorized, by letting it respond to a request with a specific self-signed cert utilizing the ALPN extension."
@@ -51,34 +51,33 @@
 (extend-type Challenge
   Certificaat
   (valid? [this]
-    (let [status (try
-                   (.getStatus this)
-                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
-      (log/debug "Challenge status:" status)
-      (= Status/VALID status)))
+    (log/debug "Challenge status:" (.getStatus this))
+    (= Status/VALID (.getStatus this)))
+  (processing? [this]
+    (log/debug "Challenge status:" (.getStatus this))
+    (= Status/PROCESSING (.getStatus this)))
+  (invalid? [this]
+    (log/debug "Challenge status:" (.getStatus this))
+    (= Status/INVALID (.getStatus this)))
   (pending? [this]
-    (let [status (try
-                   (.getStatus this)
-                   (catch AcmeProtocolException e (log/warn (.getMessage e))))]
-      (log/debug "Challenge status:" status)
-      (= Status/PENDING status)))
+    (log/debug "Challenge status:" (.getStatus this))
+    (= Status/PENDING (.getStatus this)))
   (marshal [this path]
     (spit path (.getLocation this))))
 
 (defn accept [challenge]
   (try (.trigger challenge)
-       (catch AcmeServerException e
-         (log/error "Please authorize again.")
+       (catch AcmeException e
          (throw e)))
   (let [c (chan)]
     (a/thread (loop [y 1
                      ms nil]
                 (<!! (a/timeout (or ms 5000)))
-                (log/info "Retrieving challenge status, attempt" y)
+                (log/debug "Retrieving challenge status, attempt" y ms)
                 (let [status (log/spyf "status %s" (.getStatus challenge))]
                   (cond
                     (= status Status/VALID) status
-                    (= status Status/INVALID) (do (log/info (.getError challenge))
+                    (= status Status/INVALID) (do (log/error (.getError challenge))
                                                   status)
                     (> y 10) status
                     :else (recur (inc y) (try
