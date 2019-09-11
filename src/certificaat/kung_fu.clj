@@ -9,12 +9,11 @@
    [certificaat.acme4j.certificate :as certificate]
    [certificaat.utils :refer [exit load-url]]
    [certificaat.domain :as d]
-   [clj-http.client :as client]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
    [clojure.spec.alpha :as s]
-   [clj-http.client :as client])
+   [clojure.core.async :refer [<!!]])
   (:import java.net.URI
            org.shredzone.acme4j.exception.AcmeUnauthorizedException
            org.shredzone.acme4j.Status))
