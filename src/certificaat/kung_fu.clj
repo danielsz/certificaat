@@ -48,7 +48,6 @@
   (when-let [resource (restore path options)]
     (d/pending? resource)))
 
-
 (defn account [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
   (if-let [account-url (load-url (str config-dir "account.url"))]
     (let [session (session/create acme-uri)
@@ -62,20 +61,14 @@
 
 
 (defn order [{:keys [config-dir keypair-filename acme-uri domain san] :as options}]
-  (if-let [order-url (load-url (str config-dir domain "/order.url"))]
-    (let [session (session/create acme-uri)
-          keypair (keypair/read config-dir keypair-filename)
-          login (account/login (str config-dir "account.url") keypair session)]
-      (order/restore login (str config-dir domain "/order.url")))
-    (let [session (session/create acme-uri)
+  (let [session (session/create acme-uri)
           keypair (keypair/read config-dir keypair-filename)
           account (account/restore session keypair)
           domains (if san (conj san domain) [domain])
           order-builder (doto (.newOrder account)
                           (.domains domains))
           order (order/create account domains)]
-      (d/marshal order (str config-dir domain "/order.url"))
-      order)))
+      (d/marshal order (str config-dir domain "/order.url"))))
 
 (defn authorize [{:keys [config-dir keypair-filename acme-uri domain] :as options}]
   (let  [session (session/create acme-uri)

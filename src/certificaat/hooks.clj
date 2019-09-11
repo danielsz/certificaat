@@ -7,12 +7,10 @@
             [certificaat.hooks :as h]))
 
 (defmulti run (fn [hook options] hook))
-(defmethod run :before-challenge [_ {:keys [hooks] :as options}]
-  (when (some #{:before-challenge} hooks)
-    (w/webroot options)
-    (s/listen options)))
-(defmethod run :after-request [_ {:keys [hooks] :as options}]
-  (when (some #{:after-request} hooks)
-    (r/report options)
-    (dh/params options)
-    (cp/copy options)))
+(defmethod run :before-challenge [_ options]
+  (w/webroot options)
+  (s/listen options))
+(defmethod run :after-request [_ options]
+  (r/report options)
+  (dh/params options)
+  (cp/copy options))
