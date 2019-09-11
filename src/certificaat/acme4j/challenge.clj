@@ -76,11 +76,11 @@
                 (<!! (a/timeout (or ms 5000)))
                 (log/debug "Retrieving challenge status, attempt" y ms)
                 (cond
-                  (d/valid? challenge) status
+                  (d/valid? challenge) "Valid"
                   (d/invalid? challenge) (do (log/error (.getError challenge))
-                                             status)
-                  (d/processing? challenge) status
-                  (d/pending? challenge) status
+                                             "Invalid")
+                  (d/processing? challenge) "Processing"
+                  (d/pending? challenge) "Pending"
                   (> y 10) status
                   :else (recur (inc y) (try
                                          (.update challenge)
