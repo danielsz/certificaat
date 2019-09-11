@@ -21,7 +21,7 @@
                                          :next-state nil}
                                         {:valid-when []
                                          :side-effect #(do)
-                                         :next-state :find-account}]                     
+                                         :next-state :find-account}]
                      :find-authorizations [{:valid-when [#(k/pending? (str config-dir domain "/authorization." domain ".url") options)]
                                             :side-effect #(do (k/challenge options)
                                                               (hooks/run :before-challenge options)

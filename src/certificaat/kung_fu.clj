@@ -115,7 +115,7 @@
         order (order/restore login (str config-dir domain "/order.url"))]     
     (doseq [auth (.getAuthorizations order)
             :let [challenge (challenge/find auth (first (:challenges options)))]]
-      (challenge/accept challenge))))
+      (log/debug "Channel returned:" (<!! (challenge/accept challenge))))))
 
 
 (defn finalize-order [{:keys [domain config-dir acme-uri keypair-filename] :as options}]

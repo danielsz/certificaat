@@ -3,7 +3,7 @@
   (:require [clojure.core.async :as a :refer [<! <!! >!! chan thread go-loop]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
-            [certificaat.domain :refer [Certificaat]]
+            [certificaat.domain :as d :refer [Certificaat]]
             [certificaat.utils :refer [load-url]]
             [clojure.string :as str])
   (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge TlsAlpn01Challenge]
@@ -66,6 +66,7 @@
     (spit path (.getLocation this))))
 
 (defn accept [challenge]
+  (log/debug "Triggering challenge" (.getType challenge))
   (try (.trigger challenge)
        (catch AcmeException e
          (throw e)))
@@ -74,17 +75,18 @@
                      ms nil]
                 (<!! (a/timeout (or ms 5000)))
                 (log/debug "Retrieving challenge status, attempt" y ms)
-                (let [status (log/spyf "status %s" (.getStatus challenge))]
-                  (cond
-                    (= status Status/VALID) status
-                    (= status Status/INVALID) (do (log/error (.getError challenge))
-                                                  status)
-                    (> y 10) status
-                    :else (recur (inc y) (try
-                                           (.update challenge)
-                                           (catch AcmeRetryAfterException e
-                                             (log/error (.getMessage e))
-                                             (.getRetryAfter e))))))))))
+                (cond
+                  (d/valid? challenge) status
+                  (d/invalid? challenge) (do (log/error (.getError challenge))
+                                             status)
+                  (d/processing? challenge) status
+                  (d/pending? challenge) status
+                  (> y 10) status
+                  :else (recur (inc y) (try
+                                         (.update challenge)
+                                         (catch AcmeRetryAfterException e
+                                           (log/error (.getMessage e))
+                                           (.getRetryAfter e)))))))))
 
 
 
