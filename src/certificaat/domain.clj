@@ -42,7 +42,7 @@
 
 (s/def ::cli-actions #{"init" "run" "config" "reset" "info" "cron"})
 (s/def ::cli-options (s/keys :req-un [::config-dir ::domain]))
-(s/def ::config (s/keys :req-un [::acme-uri ::domain ::challenges ::contact ::plugins ::hooks]
+(s/def ::config (s/keys :req-un [::acme-uri ::domain ::challenges ::contact ::plugins]
                         :opt-un [::san]))
 
 (defprotocol Certificaat
@@ -67,5 +67,4 @@
                 (derive :san ::domain)
                 (derive :organisation ::domain)
                 (derive :challenges ::domain)
-                (derive :hooks ::domain)
                 (derive :plugins ::domain)))

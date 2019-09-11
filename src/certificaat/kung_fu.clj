@@ -82,8 +82,8 @@
          keypair (keypair/read config-dir  keypair-filename)
          login (account/login (str (:config-dir options) "/account.url") keypair session)
          order (order/restore login (str (:config-dir options) (:domain options) "/order.url"))]
-    (doseq [auth (.getAuthorizations order)
-            :when (not (.isWildcard auth))]
+    (doseq [auth (.getAuthorizations order)]
+      (when (.isWildcard auth) (log/debug "Authorizing wildcard domain"))
       (d/marshal auth (str (:config-dir options) (:domain options) "/authorization." (.getDomain (.getIdentifier auth)) ".url")))))
 
 (defn challenge [{:keys [config-dir keypair-filename acme-uri domain] :as options}]
