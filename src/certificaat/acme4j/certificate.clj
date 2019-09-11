@@ -11,12 +11,10 @@
            [org.bouncycastle.util.io.pem PemReader]
            [java.io FileWriter FileReader ByteArrayInputStream]))
 
-(defn prepare [keypair domain organization & additional-domains]
+(defn prepare [keypair domains organization]
   (let [builder (CSRBuilder.)]
-    (.addDomain builder domain)
-    (when additional-domains
-      (doseq [domain additional-domains]
-        (.addDomain builder domain)))
+    (doseq [domain domains]
+      (.addDomain builder domain))
     (doto builder
       (.setOrganization organization)
       (.sign keypair))))

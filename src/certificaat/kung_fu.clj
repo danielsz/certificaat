@@ -105,13 +105,14 @@
       (log/debug "Channel returned:" (<!! (challenge/accept challenge))))))
 
 
-(defn finalize-order [{:keys [domain config-dir acme-uri keypair-filename] :as options}]
+(defn finalize-order [{:keys [domain config-dir acme-uri keypair-filename san] :as options}]
   (let [session (session/create acme-uri)
         keypair (keypair/read config-dir keypair-filename)
         login (account/login (str config-dir "account.url") keypair session)
         order (order/restore login (str config-dir domain "/order.url"))
         domain-keypair (keypair/read (str config-dir domain "/domain.key"))
-        csrb (certificate/prepare domain-keypair domain (:organisation options))
+        domains (if san (conj san domain) [domain])
+        csrb (certificate/prepare domain-keypair domains (:organisation options))
         csr (.getEncoded csrb)]
     (certificate/persist-certificate-request csrb (str config-dir domain "/cert.csr")) 
     (.execute order csr)))
