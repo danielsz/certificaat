@@ -2,7 +2,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} --- %msg%n</pattern>
     </encoder>
   </appender>
   
@@ -10,8 +10,7 @@
     <appender-ref ref="STDOUT" />
   </root>
 
-  <logger name="org.shredzone.acme4j" level="INFO"
-	  additivity="false">
+  <logger name="org.shredzone.acme4j" level="INFO">
     <appender-ref ref="STDOUT" />
   </logger>
 
