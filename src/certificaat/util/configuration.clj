@@ -26,6 +26,8 @@
                                           :modulus 2048
                                           :filename "dhparam.pem"
                                           :group14 true}
+                         :copy-to-path {:enabled false
+                                        :path "/tmp"}
                          :email {:enabled false
                                  :smtp {:host "smtp.changeme.org"
                                         :user "changeme"

@@ -30,15 +30,15 @@
 (s/def ::account-url #(re-matches #"account.url" %))
 (s/def ::certificate-url #(re-matches #"certificate.url" %))
 
-
 (s/def ::hook #{:before-challenge :after-request})
 (s/def ::hooks (s/* ::hook))
-(s/def ::plugins (s/keys :opt-un [::dhparams ::webroot ::email]))
+(s/def ::plugins (s/keys :opt-un [::dhparams ::webroot ::email ::copy-to-path]))
 (s/def ::enabled boolean?)
 
 (s/def ::webroot (s/keys :req-un [::path ::enabled]))
 (s/def ::dhparams (s/keys :req-un [::enabled]))
 (s/def ::email (s/keys :req-un [::enabled]))
+(s/def ::copy-to-path (s/keys :req-un [::enabled ::path]))
 
 (s/def ::cli-actions #{"init" "run" "config" "reset" "info" "cron"})
 (s/def ::cli-options (s/keys :req-un [::config-dir ::domain]))
