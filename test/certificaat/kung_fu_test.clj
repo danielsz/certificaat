@@ -27,7 +27,7 @@
               :organisation "ChangeMe corporation"
               :contact "mailto:admin@change.me"
               :challenges #{"http-01"}
-              :san #{"foo.tuppu.net"}
+              :san #{"www.teamsocial.me"}
               :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
               :plugins {:webroot {:enabled false
                                   :path "/tmp"}
