@@ -237,7 +237,7 @@
         domains (if (:san options) (conj (:san options) (:domain options)) [(:domain options)])
         order (order/create account domains)
         domain-keypair (keypair/read (str (:config-dir options) (:domain options)) "/domain.key")
-        csrb (certificate/prepare domain-keypair (:domain options) (:organisation options))
+        csrb (certificate/prepare domain-keypair domains (:organisation options))
         csr (.getEncoded csrb)]
     (certificate/persist-certificate-request csrb (str (:config-dir options) (:domain options) "/cert.csr")) 
     (.execute order csr)
