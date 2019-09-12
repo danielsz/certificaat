@@ -12,6 +12,7 @@
             [certificaat.utils :refer [load-url]]
             [certificaat.plugins.server :as server]
             [clj-http.client :as client]
+            [clojure.core.async :refer [<!!]]
             [clojure.test :refer [deftest is use-fixtures testing]])
   (:import [java.io FileWriter]
            [java.time Instant]
@@ -47,6 +48,8 @@
 
 (defn setup [f]
   (config/setup options)
+  (kung-fu/account options)
+  (kung-fu/order options)
   (f)
   (config/delete-domain-config-dir! options))
 
@@ -224,7 +227,7 @@
                         (challenge/find authorization (first (:challenges options))))         
            server (server/listen challenges options)]
       (doseq [challenge challenges]
-        (log/debug "Channel returned:" (<!! (challenge/accept challenge))))
+        (println "Channel returned:" (<!! (challenge/accept challenge))))
       (doseq [authorization authorizations]
         (.update authorization)
         (is (= true (valid? authorization))))
@@ -249,8 +252,7 @@
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
         account (account/read session keypair)
         login (.login session (.getLocation account) keypair)
-        url-path (str (:config-dir options) (:domain options) "/order.url")        
-        order (.bindOrder login (load-url url-path))
+        order (order/restore login (str (:config-dir options) (:domain options) "/order.url"))
         csrb (certificate/load-certificate-request (str (:config-dir options) (:domain options) "/cert.csr"))
         csr (.getEncoded csrb)
         _ (.execute order csr)
