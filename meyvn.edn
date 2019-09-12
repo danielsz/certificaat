@@ -5,7 +5,7 @@
   :name "certificaat"},
  :packaging
  {:uberjar
-  {:enabled true,
+  {:enabled false,
    :main-class "main.core",
    :remote-repository
    {:id "ssh-repository",
@@ -18,7 +18,7 @@
      "META-INF/*.DSA"
      "META-INF/*.RSA"]}},
   :jar
-  {:enabled false,
+  {:enabled true,
    :remote-repository
    {:id "clojars", :url "https://clojars.org/repo"}}},
  :cljs

@@ -11,7 +11,7 @@ Certificaat is optimized for a specific workflow: retrieve a certificate for you
 In your ~deps.edn~, add an alias for ~certificaat~.
 
 #+begin_src clojure
-:aliases {:certificaat {:extra-deps {org.danielsz/certificaat {:local/root "/home/arch/daniel/Clojure/certificaat"}}
+:aliases {:certificaat {:extra-deps {org.danielsz/certificaat {:mvn/version "2.0.3"}}
                         :extra-paths ["resources"]
                         :main-opts ["-m" "certificaat.core"]}}
 #+end_src
@@ -160,10 +160,10 @@ $ sudo socat tcp-listen:80,reuseaddr,fork tcp:localhost:3010
 
 Certificaat will honor all challenges defined in the ACME specification.
 
-| Challenge                             | Option identifier | Let’s Encrypt | Certificaat |
-| HTTP                                  | http-01           | ✓             | ✓           |
-| DNS                                   | dns-01            | ✓             | ✓           |
-| TLS with Server Name Indication (SNI) | tls-alpn-01       | ✓             | ✓           |
+| Challenge | Option identifier | Let’s Encrypt | Certificaat |
+| HTTP      | http-01           | ✓             | ✓           |
+| DNS       | dns-01            | ✓             | ✓           |
+| ALPN      | tls-alpn-01       | ✓             | ✓           |
 
 ** Wildcard domains
 
