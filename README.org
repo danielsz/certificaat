@@ -1,6 +1,6 @@
 * Certificaat
 ** Definition
-Certificaat is a general-purpose [[https://tools.ietf.org/html/draft-ietf-acme-acme-06][ACME]] client, fully compatible with the [[https://letsencrypt.org/][Let’s Encrypt]] CA.
+Certificaat is a general-purpose [[https://tools.ietf.org/html/draft-ietf-acme-acme-06][ACME]] client, fully compatible with the [[https://letsencrypt.org/][Let’s Encrypt]] certificate authority. 
 ** Motivation
 If [[https://certbot.eff.org/][certbot]] does everything for everybody, Certificaat is narrower in scope, focusing on usability and automated renewals.
 
@@ -167,10 +167,12 @@ Certificaat will honor all challenges defined in the ACME specification.
 
 ** Wildcard domains
 
-Wildcard domains are supported with the "dns01" challenge only. (Letsencrypt)
+Wildcard domains are supported with the "dns01" challenge only. (as per the protocol)
+** Implementation
+
+Certificaat is based on the ACME protocol, API version 2. 
 
 ** Clojure library
-
 Certificaat is available on [[https://clojars.org/][Clojars]] as a regular Clojure library which you can require in your projects.
 
 [[http://clojars.org/org.danielsz/certificaat/latest-version.svg]]
@@ -178,7 +180,7 @@ Certificaat is available on [[https://clojars.org/][Clojars]] as a regular Cloju
 ** Contributions
 If you plan to submit enhancements beyond bug fixes, please coordinate with me beforehand in order to save everybody’s time and effort.
 ** Credits
-I wish to thank [[https://shredzone.org/maven/acme4j/][Richard Körber]] who wrote the Java client for the ACME protocol, [[https://github.com/shred/acme4j][acme4j]], which serves as the foundation for Certificaat. Not only is it well written, it is exquisitely [[https://shredzone.org/maven/acme4j/][documented]]. 
+I wish to thank [[https://shredzone.org/maven/acme4j/][Richard Körber]] who wrote the Java client for the ACME protocol, [[https://github.com/shred/acme4j][acme4j]], which serves as a foundation for Certificaat. Not only is it well written, it is exquisitely [[https://shredzone.org/maven/acme4j/][documented]]. 
 ** License
 Licensing terms will be revealed shortly. In the meantime, do what you want with it.
 Type ~certificaat -h~ to familiarize yourself with the input it expects.
