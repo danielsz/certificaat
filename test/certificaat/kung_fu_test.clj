@@ -224,7 +224,7 @@
                         (challenge/find authorization (first (:challenges options))))         
            server (server/listen challenges options)]
       (doseq [challenge challenges]
-        (challenge/accept challenge))
+        (log/debug "Channel returned:" (<!! (challenge/accept challenge))))
       (doseq [authorization authorizations]
         (.update authorization)
         (is (= true (valid? authorization))))
