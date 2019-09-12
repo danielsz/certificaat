@@ -124,6 +124,9 @@
     (certificate/persist-certificate-request csrb (str config-dir domain "/cert.csr")) 
     (.execute order csr)))
 
+(defn certificate-location [{{{path :path enabled :enabled} :copy-to-path} :plugins :as options}]
+  (if enabled path (str config-dir domain "/")))
+
 (defn get-certificate [{:keys [domain config-dir acme-uri keypair-filename] :as options}]
   (let [session (session/create acme-uri)
         keypair (keypair/read config-dir keypair-filename)
@@ -135,7 +138,7 @@
     (certificate/persist cert (str config-dir domain "/cert-chain.crt"))
     (.checkValidity X509Certificate)
     (d/marshal cert (str config-dir domain "/cert.url"))
-    (log/info "Well done! You will find your certificate chain in" (str config-dir domain "/"))))
+    (log/info "Well done! You will find your certificate chain in" (certificate-location))))
 
 (defn hooks-enabled? [hooks]
   (some (fn [[k v]] (:enabled v)) hooks))
