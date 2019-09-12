@@ -180,7 +180,7 @@ Certificaat is available on [[https://clojars.org/][Clojars]] as a regular Cloju
 ** Contributions
 If you plan to submit enhancements beyond bug fixes, please coordinate with me beforehand in order to save everybody’s time and effort.
 ** Credits
-I wish to thank [[https://shredzone.org/maven/acme4j/][Richard Körber]] who wrote the Java client for the ACME protocol, [[https://github.com/shred/acme4j][acme4j]], which serves as a foundation for Certificaat. Not only is it well written, it is exquisitely [[https://shredzone.org/maven/acme4j/][documented]]. 
+I wish to thank [[https://shredzone.org/maven/acme4j/][Richard Körber]] who wrote the Java client for the ACME protocol, [[https://github.com/shred/acme4j][acme4j]], which serves as a foundation for Certificaat. Not only is it well written, it is also exquisitely [[https://shredzone.org/maven/acme4j/][documented]]. 
 ** License
 Licensing terms will be revealed shortly. In the meantime, do what you want with it.
 Type ~certificaat -h~ to familiarize yourself with the input it expects.
