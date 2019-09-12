@@ -19,9 +19,8 @@
            org.shredzone.acme4j.Status))
 
 (defn account-path [{:keys [config-dir keypair-filename acme-uri] :as options}]
-  (let [account-url (if (str/includes? acme-uri "staging") "staging-account.url" "account.url")
-        path (str config-dir account-url)]
-    (str config-dir path)))
+  (let [account-url (if (str/includes? acme-uri "staging") "staging-account.url" "account.url")]
+    (str config-dir account-url)))
 
 (defn login [keypair session options]
   (let [path (account-path options)]
