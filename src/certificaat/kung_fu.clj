@@ -124,7 +124,7 @@
     (certificate/persist-certificate-request csrb (str config-dir domain "/cert.csr")) 
     (.execute order csr)))
 
-(defn certificate-location [{{{path :path enabled :enabled} :copy-to-path} :plugins :as options}]
+(defn certificate-location [{{{path :path enabled :enabled} :copy-to-path} :plugins config-dir :config-dir :as options}]
   (if enabled path (str config-dir domain "/")))
 
 (defn get-certificate [{:keys [domain config-dir acme-uri keypair-filename] :as options}]

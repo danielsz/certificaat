@@ -4,7 +4,7 @@ Certificaat is a general-purpose [[https://tools.ietf.org/html/draft-ietf-acme-a
 ** Motivation
 If [[https://certbot.eff.org/][certbot]] does everything for everybody, Certificaat is narrower in scope, focusing on usability and automated renewals.
 
-Hence, certificaat is optimized for a specific workflow: retrieve a certificate for your domain, and subsequently set up a cron job and forget about it.
+Certificaat is optimized for a specific workflow: retrieve a certificate for your domain, and subsequently set up a cron job and forget about it.
 
 ** Installation
 
@@ -128,12 +128,6 @@ this:
 
 | Staging URI                    | Production URI         |
 | acme://letsencrypt.org/staging | acme://letsencrypt.org |
-
-
-#+BEGIN_SRC shell
-certificaat -m change.me run 
-#+END_SRC
-
 
 **** Plugins
 
