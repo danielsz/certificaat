@@ -18,7 +18,10 @@
 (s/def ::contact (s/and string? #(.isOpaque (URI. %))))
 (s/def ::key-size #{1024 2048 4096})
 (s/def ::key-type #{:rsa :ec})
-(s/def ::domain (s/and string? #(try (.isReachable (InetAddress/getByName %) 5000)
+(s/def ::domain (s/or :wildcard ::wildcard-domain :regular ::regular-domain))
+(def wildcard-regex #"^(\*.\.?)([\w-]+\.)+[\w-]+")
+(s/def ::wildcard-domain (s/and string? #(re-matches wildcard-regex  %)))
+(s/def ::regular-domain (s/and string? #(try (.isReachable (InetAddress/getByName %) 5000)
                                      (catch java.io.IOException e false))))
 (s/def ::san (s/coll-of ::domain :kind set?))
 (s/def ::organisation string?)
@@ -41,8 +44,14 @@
 
 (s/def ::cli-actions #{"init" "run" "config" "reset" "info" "cron"})
 (s/def ::cli-options (s/keys :req-un [::config-dir ::domain]))
-(s/def ::config (s/keys :req-un [::acme-uri ::domain ::challenge-type ::contact ::plugins]
-                        :opt-un [::san]))
+(s/def ::config (s/and (s/keys :req-un [::acme-uri ::domain ::challenge-type ::contact ::plugins]
+                               :opt-un [::san])
+                       #(if (some (fn [map-entry] (= :wildcard (key map-entry))) (:san %))
+                          (= (:challenge-type %) "dns-01")
+                          true)
+                       #(if (= :wildcard (key (:domain %)))
+                          (= (:challenge-type %) "dns-01")
+                          true)))
 
 (defprotocol Certificaat
   (valid? [this])

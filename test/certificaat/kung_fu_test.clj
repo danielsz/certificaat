@@ -26,7 +26,7 @@
               :domain "zebulun.tuppu.net"
               :organisation "ChangeMe corporation"
               :contact "mailto:admin@change.me"
-              :challenges #{"http-01"}
+              :challenge-type "http-01"
               :san #{"www.teamsocial.me"}
               :hooks [:before-challenge :after-request] ; hooks to inject before challenges and after certificate request 
               :plugins {:webroot {:enabled false
