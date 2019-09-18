@@ -179,7 +179,7 @@
            order (order/restore login (str (:config-dir options) (:domain options) "/order.url"))
            authorizations (.getAuthorizations order)
            challenges (for [authorization authorizations]
-                        (challenge/find authorization (first (:challenges options))))         
+                        (challenge/find authorization (:challenge-type options)))
            server (server/listen challenges options)]
       (doseq [challenge challenges]
         (println "Channel returned:" (<!! (challenge/accept challenge))))
