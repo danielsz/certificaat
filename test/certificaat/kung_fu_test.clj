@@ -120,6 +120,13 @@
     (is (= org.shredzone.acme4j.Login (type login)))
     (is (= org.shredzone.acme4j.Account (type (.getAccount login))))))
 
+(deftest wildcard-domain-validation
+  (let [options-with-wildcard-domain (assoc options :domain "*.tuppu.net")
+        options-with-wildcard-san (assoc options :san #{"*.tuppu.net"})]
+    (is (thrown? Exception (d/validate ::d/config options-with-wildcard-domain)))
+    (is (thrown? Exception (d/validate ::d/config options-with-wildcard-san)))
+    (is (d/validate ::d/config options))))
+
 (deftest authorization
   (let [session (session/create (:acme-uri options))
         keypair (keypair/read (:config-dir options) (:keypair-filename options))
