@@ -34,15 +34,15 @@ $ chmod u+x /usr/local/bin/certificaat
 
 To get a certificate for a domain, follow these steps:
 
-1. Run ~certificaat -m change.me run~
+ 1. Run ~certificaat -m change.me run~
 
 ~certificaat~ will display instructions pertaining to the challenge. This is the time to satisfy the requirements (for example, configuring DNS records or preparing your web server). 
 
-2. Review your settings in ~config.edn~. 
+ 2. Review your settings in ~config.edn~. 
 
 Make sure you can accept the challenge. With the ~http01~ challenge, you have the option to use the built-in server to respond to the requests, or you can instruct ~certificaat~ to put the authorization tokens in the right folder of your web server.
 
-3. Run ~certificaat -m change.me run~ 
+ 3. Run ~certificaat -m change.me run~ 
 
 When you are ready, simply repeat the operation and the challenges will be triggered and, if successfully completed, a certificate downloaded and saved to disk. 
 
