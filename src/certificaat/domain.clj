@@ -8,7 +8,7 @@
   (let [v (s/conform spec val)]
     (if (= v ::s/invalid)
       (throw (ex-info "Invalid options" (s/explain-data spec val)))
-      v)))
+      val)))
 
 (s/def ::path (s/and string? #(try (.exists (io/file %))
                                    (catch java.io.IOException e false))))
