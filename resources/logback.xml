@@ -6,7 +6,7 @@
     </encoder>
   </appender>
   
-  <root level="debug">
+  <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
 
@@ -14,5 +14,6 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
-  <logger name="org.jose4j.jwa" level="INFO"/>
+  <logger name="org.jose4j" level="INFO"/>
+
 </configuration>
