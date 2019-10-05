@@ -1,11 +1,11 @@
 {:pom
  {:group-id "org.danielsz",
   :artifact-id "certificaat",
-  :version "2.0.4",
+  :version "2.0.6",
   :name "certificaat"},
  :packaging
  {:uberjar
-  {:enabled true,
+  {:enabled false,
    :main-class "main.core",
    :remote-repository
    {:id "ssh-repository",
@@ -18,7 +18,7 @@
      "META-INF/*.DSA"
      "META-INF/*.RSA"]}},
   :jar
-  {:enabled false,
+  {:enabled true,
    :remote-repository
    {:id "clojars", :url "https://clojars.org/repo"}}},
  :cljs

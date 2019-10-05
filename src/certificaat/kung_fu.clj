@@ -138,7 +138,7 @@
     (certificate/persist cert (str config-dir domain "/cert-chain.crt"))
     (.checkValidity X509Certificate)
     (d/marshal cert (str config-dir domain "/cert.url"))
-    (log/info "Well done! You will find your certificate chain in" (certificate-location))))
+    (log/info "Well done! You will find your certificate chain in" (certificate-location options))))
 
 (defn hooks-enabled? [hooks]
   (some (fn [[k v]] (:enabled v)) hooks))
