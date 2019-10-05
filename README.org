@@ -11,7 +11,7 @@ Certificaat is optimized for a specific workflow: retrieve a certificate for you
 In your ~deps.edn~, add an alias for ~certificaat~.
 
 #+begin_src clojure
-:aliases {:certificaat {:extra-deps {org.danielsz/certificaat {:mvn/version "2.0.4"}}
+:aliases {:certificaat {:extra-deps {org.danielsz/certificaat {:mvn/version "2.0.6"}}
                         :extra-paths ["resources"]
                         :main-opts ["-m" "certificaat.core"]}}
 #+end_src
