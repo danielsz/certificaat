@@ -55,6 +55,3 @@
                                      :next-state :find-order}]}
         sm (state-machine state-table :find-certificate)]
     (target-state sm)))
-
-
-

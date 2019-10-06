@@ -2,7 +2,7 @@
   (:require [certificaat.domain :as domain]
             [certificaat.fsm :as fsm]
             [certificaat.kung-fu :as k]
-            [certificaat.utils :refer [exit error-msg]]
+            [certificaat.utils :refer [exit error-msg verbose-logging]]
             [certificaat.util.configuration :as c]
             [certificaat.util.tentoonstelling :as t]
             [certificaat.acme4j.certificate :refer [info]]
@@ -82,6 +82,8 @@
 (defn init [options]
   (let [cli-options (validate ::domain/cli-options options)
         options (merge c/defaults cli-options)]
+    (when (not (zero? (:verbosity options)))
+      (verbose-logging))
     (c/setup options)))
 
 (defn certificaat [args]
