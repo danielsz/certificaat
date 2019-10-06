@@ -3,6 +3,7 @@
             [certificaat.utils :refer [load-url exit]]
             [clojure.core.async :as a :refer [<! <!! >!! chan thread go-loop]]
             [clojure.tools.logging :as log]
+            [certificaat.domain :as d :refer [Certificaat]]
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j Order]
            [org.shredzone.acme4j Status]
