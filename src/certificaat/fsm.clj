@@ -30,8 +30,8 @@
                                                                 (exit 0 "Are you ready to accept the challenges? Please enable a plugin.")))
                                             :next-state :find-authorizations}
                                            {:valid-when [#(k/valid? (str config-dir domain "/authorization." domain ".url") options)]
-                                            :side-effect #(k/finalize-order options)
-                                            :next-state :find-certificate}
+                                            :side-effect #(do)
+                                            :next-state :find-order}
                                            {:valid-when [#(k/invalid? (str config-dir domain "/authorization." domain ".url") options)]
                                             :side-effect #(log/warn "Authorization is invalid. Please reissue order")
                                             :next-state :find-order}
@@ -42,8 +42,8 @@
                                    :side-effect #(k/authorize options)
                                    :next-state :find-authorizations}
                                   {:valid-when [#(k/ready? (str config-dir domain "/order.url") options)]
-                                   :side-effect #(k/authorize options)
-                                   :next-state :find-authorizations}
+                                   :side-effect #(k/finalize-order options)
+                                   :next-state :find-certificate}
                                   {:valid-when [#(k/invalid? (str config-dir domain "/order.url") options)]
                                    :side-effect #(log/warn "Order is invalid. We should delete serialized order")
                                    :next-state nil}
