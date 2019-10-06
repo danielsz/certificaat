@@ -205,7 +205,7 @@
         csrb (certificate/prepare domain-keypair domains (:organisation options))
         csr (.getEncoded csrb)]
     (certificate/persist-certificate-request csrb (str (:config-dir options) (:domain options) "/cert.csr")) 
-    (.execute order csr)
+    (when (<!! (order/ready-to-finalize? order)) (.execute order csr))
     (.update order)
     (is (= true (valid? order)))))
 

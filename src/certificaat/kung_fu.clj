@@ -122,7 +122,7 @@
         csrb (certificate/prepare domain-keypair domains (:organisation options))
         csr (.getEncoded csrb)]
     (certificate/persist-certificate-request csrb (str config-dir domain "/cert.csr")) 
-    (.execute order csr)))
+    (when (<!! (order/ready-to-finalize? order)) (.execute order csr))))
 
 (defn certificate-location [{{{path :path enabled :enabled} :copy-to-path} :plugins config-dir :config-dir domain :domain :as options}]
   (if enabled path (str config-dir domain "/")))
