@@ -40,7 +40,8 @@
     (spit path (.getLocation this))))
 
 (defn ready-to-finalize? [order]
-  (let [c (chan)]
+  (if (d/ready? order)
+    (a/thread true)
     (a/thread (loop [y 1
                      ms nil]
                 (log/debug "Retrieving order status, attempt" y ms)

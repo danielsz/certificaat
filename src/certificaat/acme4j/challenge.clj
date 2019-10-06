@@ -70,21 +70,20 @@
   (try (.trigger challenge)
        (catch AcmeException e
          (throw e)))
-  (let [c (chan)]
-    (a/thread (loop [y 1
-                     ms nil]
-                (<!! (a/timeout (or ms 5000)))
-                (log/debug "Retrieving challenge status, attempt" y ms)
-                (cond
-                  (d/valid? challenge) (str "Valid after " y " attempts")
-                  (d/invalid? challenge) (do (log/error (.getError challenge))
-                                             "Invalid after" y "attempts")
-                  (> y 10) "Too many attempts"
-                  (or (d/processing? challenge) (d/pending? challenge)) (recur (inc y) (try
-                                                                                         (.update challenge)
-                                                                                         (catch AcmeRetryAfterException e
-                                                                                           (log/error (.getMessage e))
-                                                                                           (.getRetryAfter e)))))))))
+  (a/thread (loop [y 1
+                   ms nil]
+              (<!! (a/timeout (or ms 5000)))
+              (log/debug "Retrieving challenge status, attempt" y ms)
+              (cond
+                (d/valid? challenge) (str "Valid after " y " attempts")
+                (d/invalid? challenge) (do (log/error (.getError challenge))
+                                           "Invalid after" y "attempts")
+                (> y 10) "Too many attempts"
+                (or (d/processing? challenge) (d/pending? challenge)) (recur (inc y) (try
+                                                                                       (.update challenge)
+                                                                                       (catch AcmeRetryAfterException e
+                                                                                         (log/error (.getMessage e))
+                                                                                         (.getRetryAfter e))))))))
 
 
 
