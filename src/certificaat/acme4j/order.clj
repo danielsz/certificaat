@@ -43,13 +43,13 @@
   (let [c (chan)]
     (a/thread (loop [y 1
                      ms nil]
-                (<!! (a/timeout (or ms 15000)))
                 (log/debug "Retrieving order status, attempt" y ms)
+                (<!! (a/timeout (or ms 5000)))
                 (cond
                   (d/ready? order) (do (log/debug "Order is ready")
                                        true)
                   (d/invalid? order) (exit 1 "Order is invalid")
-                  (> y 10) (exit 1 "Too many attempts ")
+                  (> y 10) (exit 1 "Too many attempts finalizing order")
                   :else (recur (inc y) (try
                                          (.update order)
                                          (catch AcmeRetryAfterException e
