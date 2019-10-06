@@ -71,6 +71,8 @@ certificaat -m example.com info
 
 Certificaat will display a summary of the certificate. 
  
+Specifying the ~-v~ option will enable verbose logging, useful in debugging operations.
+
 **** Configuration
 
 Certificaat is driven by its configuration files which are generated
@@ -85,7 +87,7 @@ Configuration files are in [[https://github.com/edn-format/edn][edn]] format and
 editor. 
 
 The global configuration is stored in the root directory,
-~$HOME/.config/certificaat/change.me/config.edn~ and it looks like
+~$HOME/.config/certificaat/config.edn~ and it looks like
 this:
 
 #+BEGIN_SRC clojure
