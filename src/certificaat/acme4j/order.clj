@@ -7,14 +7,17 @@
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j Order]
            [org.shredzone.acme4j Status]
-           [org.shredzone.acme4j.exception AcmeException AcmeRetryAfterException AcmeServerException AcmeProtocolException]
+           [org.shredzone.acme4j.exception AcmeException AcmeRetryAfterException AcmeServerException AcmeProtocolException AcmeRateLimitedException]
            [java.net URL]))
 
 
 (defn create [account domains]
   (let [order-builder (doto (.newOrder account)
                         (.domains domains))]
-    (.create order-builder)))
+    (try
+      (.create order-builder)
+      (catch AcmeRateLimitedException e
+        (exit 1 (.getMessage e))))))
 
 (defn restore [login path]
   (.bindOrder login (load-url path)))
