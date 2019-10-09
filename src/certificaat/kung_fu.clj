@@ -58,11 +58,11 @@
 
 (defn all-auth-valid? [{:keys [config-dir domain san] :as options}]
   (let [domains (if san (conj san domain) [domain])]
-    (every? #(k/valid? (str config-dir domain "/authorization." % ".url") options) domains)))
+    (every? #(valid? (str config-dir domain "/authorization." % ".url") options) domains)))
 
 (defn any-auth-pending? [{:keys [config-dir domain san] :as options}]
   (let [domains (if san (conj san domain) [domain])]
-    (some #(k/pending? (str config-dir domain "/authorization." % ".url") options) domains)))
+    (some #(pending? (str config-dir domain "/authorization." % ".url") options) domains)))
 
 (defn account [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
   (let [path (account-path options)]
