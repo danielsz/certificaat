@@ -56,6 +56,13 @@
   (when-let [resource (restore path options)]
     (d/pending? resource)))
 
+(defn all-auth-valid? [{:keys [config-dir domain san] :as options}]
+  (let [domains (if san (conj san domain) [domain])]
+    (every? #(k/valid? (str config-dir domain "/authorization." % ".url") options) domains)))
+
+(defn any-auth-pending? [{:keys [config-dir domain san] :as options}]
+  (let [domains (if san (conj san domain) [domain])]
+    (some #(k/pending? (str config-dir domain "/authorization." % ".url") options) domains)))
 
 (defn account [{:keys [config-dir keypair-filename acme-uri contact] :as options}]
   (let [path (account-path options)]
@@ -70,8 +77,6 @@
         keypair (keypair/read config-dir keypair-filename)
         account (account/restore session keypair)
         domains (if san (conj san domain) [domain])
-        order-builder (doto (.newOrder account)
-                        (.domains domains))
         order (order/create account domains)]
       (d/marshal order (str config-dir domain "/order.url"))))
 

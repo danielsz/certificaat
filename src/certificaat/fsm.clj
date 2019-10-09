@@ -22,14 +22,14 @@
                                         {:valid-when []
                                          :side-effect #(do)
                                          :next-state :find-account}]
-                     :find-authorizations [{:valid-when [#(k/pending? (str config-dir domain "/authorization." domain ".url") options)]
+                     :find-authorizations [{:valid-when [#(k/any-auth-pending? options)]
                                             :side-effect #(do (k/challenge options)
                                                               (hooks/run :before-challenge options)
                                                               (if (k/hooks-enabled? (select-keys (:plugins options) [:webroot :httpd]))
                                                                 (k/accept-challenges options)
                                                                 (exit 0 "Are you ready to accept the challenges? Please enable a plugin.")))
                                             :next-state :find-authorizations}
-                                           {:valid-when [#(k/valid? (str config-dir domain "/authorization." domain ".url") options)]
+                                           {:valid-when [#(k/all-auth-valid? options)]
                                             :side-effect #(do)
                                             :next-state :find-order}
                                            {:valid-when [#(k/invalid? (str config-dir domain "/authorization." domain ".url") options)]
