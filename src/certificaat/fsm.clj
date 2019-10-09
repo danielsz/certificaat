@@ -1,11 +1,9 @@
 (ns certificaat.fsm
-  (:require [golem.stack :refer [state-machine update-state target-state]]
-            [certificaat.utils :refer [exit error-msg]]
+  (:require [golem.stack :refer [state-machine target-state]]
+            [certificaat.utils :refer [exit]]
             [certificaat.kung-fu :as k]
             [certificaat.util.configuration :as config]
             [certificaat.hooks :as hooks]
-            [clojure.core.async :refer [<!!]]
-            [clojure.java.io :as io]
             [clojure.tools.logging :as log])
   (:import clojure.lang.ExceptionInfo
            (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitedException)
