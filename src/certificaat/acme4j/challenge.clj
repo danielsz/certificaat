@@ -1,10 +1,8 @@
 (ns certificaat.acme4j.challenge
   (:refer-clojure :exclude [find])
-  (:require [clojure.core.async :as a :refer [<! <!! >!! chan thread go-loop]]
+  (:require [clojure.core.async :as a :refer [<!!]]
             [clojure.tools.logging :as log]
-            [environ.core :refer [env]]
             [certificaat.domain :as d :refer [Certificaat]]
-            [certificaat.utils :refer [load-url]]
             [clojure.string :as str])
   (:import [org.shredzone.acme4j.challenge Challenge Http01Challenge Dns01Challenge TlsAlpn01Challenge]
            [org.shredzone.acme4j Status]
