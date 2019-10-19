@@ -7,6 +7,9 @@ If [[https://certbot.eff.org/][certbot]] does everything for everybody, Certific
 Certificaat is optimized for a specific workflow: retrieve a certificate for your domain, and subsequently set up a cron job and forget about it.
 
 ** Installation
+Certificaat is available on [[https://clojars.org/][Clojars]].
+
+[[http://clojars.org/org.danielsz/certificaat/latest-version.svg]]
 
 In your ~deps.edn~, add an alias for ~certificaat~.
 
@@ -173,11 +176,6 @@ Wildcard domains are supported with the "dns01" challenge only. (as per the prot
 ** Implementation
 
 Certificaat is based on the ACME protocol, API version 2. 
-
-** Clojure library
-Certificaat is available on [[https://clojars.org/][Clojars]] as a regular Clojure library which you can require in your projects.
-
-[[http://clojars.org/org.danielsz/certificaat/latest-version.svg]]
 
 ** Contributions
 If you plan to submit enhancements beyond bug fixes, please coordinate with me beforehand in order to save everybody’s time and effort.
