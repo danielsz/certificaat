@@ -9,9 +9,8 @@
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [clojure.tools.cli :refer [parse-opts get-default-options]]
-            [puget.printer :as puget]
-            [clojure.java.io :as io])
+            [clojure.tools.cli :refer [parse-opts]]
+            [puget.printer :as puget])
   (:import clojure.lang.ExceptionInfo
            (org.shredzone.acme4j.exception AcmeServerException AcmeUnauthorizedException AcmeRateLimitedException)
            org.shredzone.acme4j.Status))

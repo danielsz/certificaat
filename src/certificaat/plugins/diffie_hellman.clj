@@ -1,6 +1,5 @@
 (ns certificaat.plugins.diffie-hellman
-  (:require [clojure.string :as str]
-            [clojure.java.io :as io])
+  (:require [clojure.java.io :as io])
   (:import (java.security AlgorithmParameters AlgorithmParameterGenerator SecureRandom)
            javax.crypto.spec.DHParameterSpec
            java.io.FileWriter
@@ -27,10 +26,10 @@
 
 (defn params [{{{group14 :group14 filename :filename modulus :modulus enabled :enabled} :diffie-hellman} :plugins domain :domain config-dir :config-dir :as options}]
   (when enabled
-    (let [path (str config-dir domain "/" filename)]
-      (let [file (io/file path)]
-        (when (not (.exists file))
-          (if group14
-            (group14-to-path path)
-            (save-to-pem path (generate-parameter-set modulus))))))))
+    (let [path (str config-dir domain "/" filename)
+          file (io/file path)]
+      (when (not (.exists file))
+        (if group14
+          (group14-to-path path)
+          (save-to-pem path (generate-parameter-set modulus)))))))
 

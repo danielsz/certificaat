@@ -7,7 +7,6 @@
    [certificaat.acme4j.order :as order]
    [certificaat.acme4j.authorization :as authorization]
    [certificaat.acme4j.certificate :as certificate]
-   [certificaat.utils :refer [exit load-url]]
    [certificaat.domain :as d]
    [clojure.java.io :as io]
    [clojure.string :as str]
@@ -18,7 +17,7 @@
            org.shredzone.acme4j.exception.AcmeUnauthorizedException
            org.shredzone.acme4j.Status))
 
-(defn account-path [{:keys [config-dir keypair-filename acme-uri] :as options}]
+(defn account-path [{:keys [config-dir acme-uri] :as options}]
   (let [account-url (if (str/includes? acme-uri "staging") "staging-account.url" "account.url")]
     (str config-dir account-url)))
 
@@ -115,7 +114,7 @@
         order (order/restore login (str config-dir domain "/order.url"))]     
     (doseq [auth (.getAuthorizations order)
             :let [challenge (challenge/find auth challenge-type)]]
-      (log/debug "Channel returned:" (<!! (challenge/accept challenge))))))
+      (<!! (challenge/accept challenge)))))
 
 (defn finalize-order [{:keys [domain config-dir acme-uri keypair-filename san] :as options}]
   (let [session (session/create acme-uri)
@@ -139,7 +138,8 @@
         order (order/restore login (str config-dir domain "/order.url"))
         cert (.getCertificate order)
         X509Certificate (.getCertificate cert)
-        chain (.getCertificateChain cert)]
+        ;chain (.getCertificateChain cert)
+        ]
     (certificate/persist cert (str config-dir domain "/cert-chain.crt"))
     (.checkValidity X509Certificate)
     (d/marshal cert (str config-dir domain "/cert.url"))

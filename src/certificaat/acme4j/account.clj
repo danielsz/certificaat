@@ -1,11 +1,8 @@
 (ns certificaat.acme4j.account
   (:refer-clojure :exclude [read])
-  (:require [environ.core :refer [env]]            
-            [clojure.tools.logging :as log]
-            [certificaat.acme4j.keypair :as keypair]
+  (:require [clojure.tools.logging :as log]
             [certificaat.domain :refer [Certificaat]]
-            [certificaat.utils :refer [load-url]]
-            [clojure.string :as str])
+            [certificaat.utils :refer [load-url]])
   (:import
    [org.shredzone.acme4j Account AccountBuilder Login Status]
    [org.shredzone.acme4j.exception AcmeProtocolException]))

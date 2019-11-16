@@ -1,10 +1,7 @@
 (ns certificaat.acme4j.authorization
-  (:require [clojure.core.async :as a :refer [<!!]]
-            [clojure.tools.logging :as log]
-            [environ.core :refer [env]]
+  (:require [clojure.tools.logging :as log]
             [certificaat.domain :refer [Certificaat]]
-            [certificaat.utils :refer [load-url]]
-            [certificaat.acme4j.session :as session])
+            [certificaat.utils :refer [load-url]])
   (:import [org.shredzone.acme4j Authorization]
            [org.shredzone.acme4j.challenge Http01Challenge Dns01Challenge]
            org.shredzone.acme4j.Status

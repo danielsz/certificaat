@@ -1,10 +1,8 @@
 (ns certificaat.acme4j.order
-  (:require [certificaat.domain :refer [Certificaat]]
-            [certificaat.utils :refer [load-url exit]]
-            [clojure.core.async :as a :refer [<! <!! >!! chan thread go-loop]]
+  (:require [certificaat.utils :refer [load-url exit]]
+            [clojure.core.async :as a :refer [<!!]]
             [clojure.tools.logging :as log]
-            [certificaat.domain :as d :refer [Certificaat]]
-            [clojure.java.io :as io])
+            [certificaat.domain :as d :refer [Certificaat]])
   (:import [org.shredzone.acme4j Order]
            [org.shredzone.acme4j Status]
            [org.shredzone.acme4j.exception AcmeException AcmeRetryAfterException AcmeServerException AcmeProtocolException AcmeRateLimitedException]

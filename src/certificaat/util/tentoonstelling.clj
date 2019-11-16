@@ -1,6 +1,5 @@
 (ns certificaat.util.tentoonstelling
-  (:require [clojure.tools.logging :as log]
-            [clojure.string :as str])
+  (:require [clojure.string :as str])
   (:import [javax.swing JOptionPane]
            [java.awt GraphicsEnvironment]))
 

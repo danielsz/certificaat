@@ -3,7 +3,6 @@
             [certificaat.acme4j.keypair :as keypair]
             [certificaat.util.download :as d]
             [certificaat.domain :as domain]
-            [environ.core :refer [env]]
             [puget.printer :as puget]
             [clojure.string :as str]))
 

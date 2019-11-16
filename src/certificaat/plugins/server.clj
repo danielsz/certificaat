@@ -1,9 +1,7 @@
 (ns certificaat.plugins.server
   (:require
    [certificaat.kung-fu :as k]
-   [immutant.web :refer [run stop]]
-   [clojure.string :as str]
-   [clojure.tools.logging :as log]))
+   [immutant.web :refer [run stop]]))
 
 (def stop-server stop )
 

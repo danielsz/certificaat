@@ -1,9 +1,7 @@
 (ns certificaat.acme4j.certificate
-  (:require [certificaat.acme4j.account :as account]
-            [certificaat.domain :refer [Certificaat]]
+  (:require [certificaat.domain :refer [Certificaat]]
             [certificaat.utils :refer [load-url]]
             [clojure.tools.logging :as log]
-            [environ.core :refer [env]]
             [clojure.java.io :as io])
   (:import [org.shredzone.acme4j Certificate RevocationReason]
            [org.shredzone.acme4j.util KeyPairUtils CSRBuilder CertificateUtils]
