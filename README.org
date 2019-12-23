@@ -1,6 +1,6 @@
 * Certificaat
 
-http://clojars.org/org.danielsz/certificaat/latest-version.svg]]
+[[http://clojars.org/org.danielsz/certificaat/latest-version.svg]]
 
 Certificaat is available on [[https://clojars.org/][Clojars]].
 [[https://danielsz.github.io/certificaat][Documentation]].
