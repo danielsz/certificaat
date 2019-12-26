@@ -27,12 +27,23 @@ blockquote > p {
   font-style: italic;
 }
 
-h3 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Source Sans Pro', sans-serif;
   font-weight: 600;
+}
+
+h3 {
   font-size: 1.4em;
 }
 
+h4 {
+  font-size: 1.3em;
+}
 #text-table-of-contents {
   text-transform: uppercase;
 }
