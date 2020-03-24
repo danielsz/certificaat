@@ -1,7 +1,7 @@
 {:pom
  {:group-id "org.danielsz",
   :artifact-id "certificaat",
-  :version "2.1.5",
+  :version "2.1.6",
   :name "certificaat"},
  :packaging
  {:uberjar
@@ -35,7 +35,7 @@
    :foreign-libs [],
    :main "main.core"},
   :tools-deps-alias :cljs},
- :testing {:enabled true, :tools-deps-alias :test},
+ :testing {:enabled false, :tools-deps-alias :test},
  :scm {:enabled false},
  :interactive
  {:enabled true,
