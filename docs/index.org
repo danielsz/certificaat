@@ -27,13 +27,13 @@ In your ~deps.edn~, add an alias for ~certificaat~.
 You can now invoke it like this:
 
 #+begin_src sh
-$ clj -A:certificaat
+$ clj -M:certificaat
 #+end_src
 
 It is recommended to create an executable file in your path for ease of use.
 
 #+begin_src sh
-$ echo 'clj -A:certificaat  "$@"' > /usr/local/bin/certificaat
+$ echo 'clj -M:certificaat  "$@"' > /usr/local/bin/certificaat
 $ chmod u+x /usr/local/bin/certificaat
 #+end_src
 

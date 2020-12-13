@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2019-12-23 Mon 13:58 -->
+<!-- 2020-12-13 Sun 04:31 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Certificaat</title>
@@ -40,7 +40,7 @@
   }
   pre.src {
     position: relative;
-    overflow: visible;
+    overflow: auto;
     padding-top: 1.2em;
   }
   pre.src:before {
@@ -199,50 +199,26 @@
 <link rel="stylesheet" href="css/post.css" type="text/css" media="screen" />
 <script type="text/javascript" src="js/navigation.js"></script>
 <script type="text/javascript">
-/*
-@licstart  The following is the entire license notice for the
-JavaScript code in this tag.
-
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
-
-The JavaScript code in this tag is free software: you can
-redistribute it and/or modify it under the terms of the GNU
-General Public License (GNU GPL) as published by the Free Software
-Foundation, either version 3 of the License, or (at your option)
-any later version.  The code is distributed WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
-
-As additional permission under GNU GPL version 3 section 7, you
-may distribute non-source (e.g., minimized or compacted) forms of
-that code without the copy of the GNU GPL normally required by
-section 4, provided you include this license notice and a URL
-through which recipients can access the Corresponding Source.
-
-
-@licend  The above is the entire license notice
-for the JavaScript code in this tag.
-*/
+// @license magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt Public Domain
 <!--/*--><![CDATA[/*><!--*/
- function CodeHighlightOn(elem, id)
- {
-   var target = document.getElementById(id);
-   if(null != target) {
-     elem.cacheClassElem = elem.className;
-     elem.cacheClassTarget = target.className;
-     target.className = "code-highlighted";
-     elem.className   = "code-highlighted";
-   }
- }
- function CodeHighlightOff(elem, id)
- {
-   var target = document.getElementById(id);
-   if(elem.cacheClassElem)
-     elem.className = elem.cacheClassElem;
-   if(elem.cacheClassTarget)
-     target.className = elem.cacheClassTarget;
- }
-/*]]>*///-->
+     function CodeHighlightOn(elem, id)
+     {
+       var target = document.getElementById(id);
+       if(null != target) {
+         elem.classList.add("code-highlighted");
+         target.classList.add("code-highlighted");
+       }
+     }
+     function CodeHighlightOff(elem, id)
+     {
+       var target = document.getElementById(id);
+       if(null != target) {
+         elem.classList.remove("code-highlighted");
+         target.classList.remove("code-highlighted");
+       }
+     }
+    /*]]>*///-->
+// @license-end
 </script>
 </head>
 <body>
@@ -255,31 +231,31 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgeeb4895">Definition</a></li>
-<li><a href="#orgcc6088b">Motivation</a></li>
-<li><a href="#orgbc77d35">Installation</a></li>
-<li><a href="#orga945fa3">Usage</a></li>
-<li><a href="#org57dd62c">Challenges</a></li>
-<li><a href="#org0e9e908">Wildcard domains</a></li>
-<li><a href="#orgc70a63a">Implementation</a></li>
-<li><a href="#orgfc586b8">Contributions</a></li>
-<li><a href="#org84f8ed7">Credits</a></li>
-<li><a href="#org4052b0e">License</a></li>
+<li><a href="#org17fa151">Definition</a></li>
+<li><a href="#orgfed9260">Motivation</a></li>
+<li><a href="#org1dafe81">Installation</a></li>
+<li><a href="#org05f5091">Usage</a></li>
+<li><a href="#org1cd6cfb">Challenges</a></li>
+<li><a href="#org4b16ca7">Wildcard domains</a></li>
+<li><a href="#orgb3d1843">Implementation</a></li>
+<li><a href="#org6effc00">Contributions</a></li>
+<li><a href="#org84f64ed">Credits</a></li>
+<li><a href="#org52a84d7">License</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgeeb4895" class="outline-2">
-<h2 id="orgeeb4895">Definition</h2>
-<div class="outline-text-2" id="text-orgeeb4895">
+<div id="outline-container-org17fa151" class="outline-2">
+<h2 id="org17fa151">Definition</h2>
+<div class="outline-text-2" id="text-org17fa151">
 <p>
 Certificaat is a general-purpose <a href="https://tools.ietf.org/html/draft-ietf-acme-acme-06">ACME</a> client, fully compatible with the <a href="https://letsencrypt.org/">Let’s Encrypt</a> certificate authority. 
 </p>
 </div>
 </div>
-<div id="outline-container-orgcc6088b" class="outline-2">
-<h2 id="orgcc6088b">Motivation</h2>
-<div class="outline-text-2" id="text-orgcc6088b">
+<div id="outline-container-orgfed9260" class="outline-2">
+<h2 id="orgfed9260">Motivation</h2>
+<div class="outline-text-2" id="text-orgfed9260">
 <p>
 If <a href="https://certbot.eff.org/">certbot</a> does everything for everybody, Certificaat is narrower in scope, focusing on usability and automated renewals.
 </p>
@@ -290,9 +266,9 @@ Certificaat is optimized for a specific workflow: retrieve a certificate for you
 </div>
 </div>
 
-<div id="outline-container-orgbc77d35" class="outline-2">
-<h2 id="orgbc77d35">Installation</h2>
-<div class="outline-text-2" id="text-orgbc77d35">
+<div id="outline-container-org1dafe81" class="outline-2">
+<h2 id="org1dafe81">Installation</h2>
+<div class="outline-text-2" id="text-org1dafe81">
 <p>
 In your <code>deps.edn</code>, add an alias for <code>certificaat</code>.
 </p>
@@ -309,7 +285,7 @@ You can now invoke it like this:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ clj -A:certificaat
+<pre class="src src-sh">$ clj -M:certificaat
 </pre>
 </div>
 
@@ -318,20 +294,20 @@ It is recommended to create an executable file in your path for ease of use.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ echo <span style="color: #8b2252;">'clj -A:certificaat  "$@"'</span> &gt; /usr/local/bin/certificaat
+<pre class="src src-sh">$ echo <span style="color: #8b2252;">'clj -M:certificaat  "$@"'</span> &gt; /usr/local/bin/certificaat
 $ chmod u+x /usr/local/bin/certificaat
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orga945fa3" class="outline-2">
-<h2 id="orga945fa3">Usage</h2>
-<div class="outline-text-2" id="text-orga945fa3">
+<div id="outline-container-org05f5091" class="outline-2">
+<h2 id="org05f5091">Usage</h2>
+<div class="outline-text-2" id="text-org05f5091">
 </div>
-<div id="outline-container-org11033cf" class="outline-3">
-<h3 id="org11033cf">Overview</h3>
-<div class="outline-text-3" id="text-org11033cf">
+<div id="outline-container-org7ccdb24" class="outline-3">
+<h3 id="org7ccdb24">Overview</h3>
+<div class="outline-text-3" id="text-org7ccdb24">
 <p>
 To get a certificate for a domain, follow these steps:
 </p>
@@ -366,9 +342,9 @@ From then on, the certificate can be renewed in one pass with <code>certificaat 
 </div>
 </div>
 
-<div id="outline-container-org258a0ac" class="outline-3">
-<h3 id="org258a0ac">Command line options</h3>
-<div class="outline-text-3" id="text-org258a0ac">
+<div id="outline-container-org0aa32fd" class="outline-3">
+<h3 id="org0aa32fd">Command line options</h3>
+<div class="outline-text-3" id="text-org0aa32fd">
 <div class="org-src-container">
 <pre class="src src-shell">certificaat -m change.me run
 </pre>
@@ -408,9 +384,9 @@ Type <code>certificaat -h</code> to familiarize yourself with the input it expec
 </p>
 </div>
 </div>
-<div id="outline-container-orgdc347ca" class="outline-3">
-<h3 id="orgdc347ca">Configuration</h3>
-<div class="outline-text-3" id="text-orgdc347ca">
+<div id="outline-container-orgf07bf71" class="outline-3">
+<h3 id="orgf07bf71">Configuration</h3>
+<div class="outline-text-3" id="text-orgf07bf71">
 <p>
 Certificaat is driven by its configuration files which are generated
 with defaults that you can subsequently edit and customize.
@@ -501,9 +477,9 @@ this:
 </div>
 </div>
 
-<div id="outline-container-org6a9c233" class="outline-3">
-<h3 id="org6a9c233">Plugins</h3>
-<div class="outline-text-3" id="text-org6a9c233">
+<div id="outline-container-org4f44016" class="outline-3">
+<h3 id="org4f44016">Plugins</h3>
+<div class="outline-text-3" id="text-org4f44016">
 <p>
 Plugins are provided to perform additional functionality at key moments, namely before the challenges get triggered, or after a certificate has been acquired or renewed. The plugins need to be configured and enabled. 
 </p>
@@ -513,41 +489,41 @@ The plugin configuration resides in the per-domain directory, <code>$HOME/.confi
 </p>
 </div>
 
-<div id="outline-container-orga70ea57" class="outline-4">
-<h4 id="orga70ea57">Copy to path</h4>
-<div class="outline-text-4" id="text-orga70ea57">
+<div id="outline-container-org9ed3785" class="outline-4">
+<h4 id="org9ed3785">Copy to path</h4>
+<div class="outline-text-4" id="text-org9ed3785">
 <p>
 This will copy the certificate to a folder of your liking. If disabled, the certificate will be found in <code>$HOME/.config/certificaat/change.me/</code>.
 </p>
 </div>
 </div>
-<div id="outline-container-org4024db7" class="outline-4">
-<h4 id="org4024db7">Webroot</h4>
-<div class="outline-text-4" id="text-org4024db7">
+<div id="outline-container-org3993616" class="outline-4">
+<h4 id="org3993616">Webroot</h4>
+<div class="outline-text-4" id="text-org3993616">
 <p>
 This plugin copies the authorization tokens to your web server www directory. 
 </p>
 </div>
 </div>
-<div id="outline-container-org4db70ef" class="outline-4">
-<h4 id="org4db70ef">Email</h4>
-<div class="outline-text-4" id="text-org4db70ef">
+<div id="outline-container-orgb1fcc73" class="outline-4">
+<h4 id="orgb1fcc73">Email</h4>
+<div class="outline-text-4" id="text-orgb1fcc73">
 <p>
 An email will be sent to the contact registered with the certificate after creating or renewing a certificate. 
 </p>
 </div>
 </div>
-<div id="outline-container-org05ede3e" class="outline-4">
-<h4 id="org05ede3e">Diffie-Helman parameters</h4>
-<div class="outline-text-4" id="text-org05ede3e">
+<div id="outline-container-org910d4b4" class="outline-4">
+<h4 id="org910d4b4">Diffie-Helman parameters</h4>
+<div class="outline-text-4" id="text-org910d4b4">
 <p>
 This will save a Diffie-Helman parameters file along with the certificate, for further tuning the SSL setup.
 </p>
 </div>
 </div>
-<div id="outline-container-org6beca0e" class="outline-4">
-<h4 id="org6beca0e">httpd</h4>
-<div class="outline-text-4" id="text-org6beca0e">
+<div id="outline-container-org81f89a4" class="outline-4">
+<h4 id="org81f89a4">httpd</h4>
+<div class="outline-text-4" id="text-org81f89a4">
 <p>
 When enabled, the built-in server will respond to the challenges. Letsencrypt directs its request to port 80 exclusively. The built-in server runs on then non-privileged ports so you will need to tunnel the requests from port 80 to the built-in server's port. This is easily achieved with:
 </p>
@@ -570,9 +546,9 @@ When enabled, the built-in server will respond to the challenges. Letsencrypt di
 </div>
 </div>
 
-<div id="outline-container-org57dd62c" class="outline-2">
-<h2 id="org57dd62c">Challenges</h2>
-<div class="outline-text-2" id="text-org57dd62c">
+<div id="outline-container-org1cd6cfb" class="outline-2">
+<h2 id="org1cd6cfb">Challenges</h2>
+<div class="outline-text-2" id="text-org1cd6cfb">
 <p>
 Certificaat will honor all challenges defined in the ACME specification.
 </p>
@@ -622,42 +598,42 @@ Certificaat will honor all challenges defined in the ACME specification.
 </div>
 </div>
 
-<div id="outline-container-org0e9e908" class="outline-2">
-<h2 id="org0e9e908">Wildcard domains</h2>
-<div class="outline-text-2" id="text-org0e9e908">
+<div id="outline-container-org4b16ca7" class="outline-2">
+<h2 id="org4b16ca7">Wildcard domains</h2>
+<div class="outline-text-2" id="text-org4b16ca7">
 <p>
 Wildcard domains are supported with the "dns01" challenge only. (as per the protocol)
 </p>
 </div>
 </div>
-<div id="outline-container-orgc70a63a" class="outline-2">
-<h2 id="orgc70a63a">Implementation</h2>
-<div class="outline-text-2" id="text-orgc70a63a">
+<div id="outline-container-orgb3d1843" class="outline-2">
+<h2 id="orgb3d1843">Implementation</h2>
+<div class="outline-text-2" id="text-orgb3d1843">
 <p>
 Certificaat is based on the ACME protocol, API version 2. 
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgfc586b8" class="outline-2">
-<h2 id="orgfc586b8">Contributions</h2>
-<div class="outline-text-2" id="text-orgfc586b8">
+<div id="outline-container-org6effc00" class="outline-2">
+<h2 id="org6effc00">Contributions</h2>
+<div class="outline-text-2" id="text-org6effc00">
 <p>
 If you plan to submit enhancements beyond bug fixes, please coordinate with me beforehand in order to save everybody’s time and effort.
 </p>
 </div>
 </div>
-<div id="outline-container-org84f8ed7" class="outline-2">
-<h2 id="org84f8ed7">Credits</h2>
-<div class="outline-text-2" id="text-org84f8ed7">
+<div id="outline-container-org84f64ed" class="outline-2">
+<h2 id="org84f64ed">Credits</h2>
+<div class="outline-text-2" id="text-org84f64ed">
 <p>
 I wish to thank <a href="https://shredzone.org/maven/acme4j/">Richard Körber</a> who wrote the Java client for the ACME protocol, <a href="https://github.com/shred/acme4j">acme4j</a>, which serves as a foundation for Certificaat. Not only is it well written, it is also exquisitely <a href="https://shredzone.org/maven/acme4j/">documented</a>. 
 </p>
 </div>
 </div>
-<div id="outline-container-org4052b0e" class="outline-2">
-<h2 id="org4052b0e">License</h2>
-<div class="outline-text-2" id="text-org4052b0e">
+<div id="outline-container-org52a84d7" class="outline-2">
+<h2 id="org52a84d7">License</h2>
+<div class="outline-text-2" id="text-org52a84d7">
 <p>
 Licensing terms will be revealed shortly. In the meantime, do what you want with it.
 </p>
@@ -666,8 +642,8 @@ Licensing terms will be revealed shortly. In the meantime, do what you want with
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Daniel Szmulewicz</p>
-<p class="date">Created: 2019-12-23 Mon 13:58</p>
-<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+<p class="date">Created: 2020-12-13 Sun 04:31</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
 </html>
