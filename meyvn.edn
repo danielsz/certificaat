@@ -1,7 +1,7 @@
 {:pom
  {:group-id "org.danielsz",
   :artifact-id "certificaat",
-  :version "2.1.6",
+  :version "2.1.7",
   :name "certificaat"},
  :packaging
  {:uberjar

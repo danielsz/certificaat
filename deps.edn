@@ -1,20 +1,19 @@
-{:deps {org.clojure/core.async {:mvn/version "1.0.567"}
+{:deps {org.clojure/core.async {:mvn/version "1.5.648"}
         org.danielsz/lang-utils {:mvn/version "0.1.3"}
-        org.shredzone.acme4j/acme4j-client {:mvn/version "2.9"}
-        org.shredzone.acme4j/acme4j-utils {:mvn/version "2.9"}
-        org.clojure/tools.logging {:mvn/version "1.0.0"}
+        org.shredzone.acme4j/acme4j-client {:mvn/version "2.12"}
+        org.shredzone.acme4j/acme4j-utils {:mvn/version "2.12"}
+        org.clojure/tools.logging {:mvn/version "1.2.1"}
         ch.qos.logback/logback-classic {:mvn/version "1.2.3"}
-        org.clojure/tools.cli {:mvn/version "1.0.194"}
+        org.clojure/tools.cli {:mvn/version "1.0.206"}
         org.kohsuke/libpam4j {:mvn/version "1.11"}
-        mvxcvi/puget {:mvn/version "1.2.0"}
+        mvxcvi/puget {:mvn/version "1.3.2"}
         me.raynes/conch {:mvn/version  "0.8.0"}
-        com.draines/postal {:mvn/version "2.0.3"}
-        clj-http {:mvn/version "3.10.0"}
+        com.draines/postal {:mvn/version "2.0.5"}
+        clj-http/clj-http {:mvn/version "3.12.3"}
         org.immutant/web {:mvn/version "2.1.10"}
-        ring {:mvn/version "1.8.0"}
+        ring/ring {:mvn/version "1.8.0"}
         org.danielsz/golem {:mvn/version "0.0.1-SNAPSHOT"}}
- :aliases {:repl {:extra-deps {nrepl {:mvn/version "0.6.0"}
-                               cider/cider-nrepl {:mvn/version "0.24.0"}
-                               org.danielsz/system {:mvn/version "0.4.5"}
-                               refactor-nrepl {:mvn/version "2.5.0"}}}
+ :aliases {:repl {:extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}
+                               cider/cider-nrepl {:mvn/version "0.27.3"}
+                               org.danielsz/system {:mvn/version "0.4.7"}}}
            :test {:extra-paths ["test" "resources"]}}}
