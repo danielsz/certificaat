@@ -18,9 +18,7 @@
      "META-INF/*.DSA"
      "META-INF/*.RSA"]}},
   :jar
-  {:enabled true,
-   :remote-repository
-   {:id "clojars", :url "https://clojars.org/repo"}}},
+  {:enabled true}},
  :cljs
  {:enabled false,
   :compiler-opts
@@ -75,4 +73,6 @@
     :infer-externs true},
    :tools-deps-alias :figwheel}},
  :graalvm {:enabled false, :with-https false},
- :profiles {:enabled false}}
+ :profiles {:enabled false}
+ :distribution-management
+   {:id "clojars", :url "https://clojars.org/repo"}}
