@@ -2,6 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.java.io :as io])
   (:import [java.net InetAddress]
+           [java.net UnknownHostException]
            [java.net URI]))
 
 (defn validate [spec val]
@@ -21,8 +22,9 @@
 (s/def ::domain (s/or :wildcard ::wildcard-domain :regular ::regular-domain))
 (def wildcard-regex #"^(\*.\.?)([\w-]+\.)+[\w-]+")
 (s/def ::wildcard-domain (s/and string? #(re-matches wildcard-regex  %)))
-(s/def ::regular-domain (s/and string? #(try (.isReachable (InetAddress/getByName %) 5000)
-                                     (catch java.io.IOException e false))))
+(s/def ::regular-domain (s/and string? #(try (InetAddress/getByName %)
+                                             (catch UnknownHostException e false)
+                                             (catch java.io.IOException e false))))
 (s/def ::san (s/coll-of ::domain :kind set?))
 (s/def ::organisation string?)
 (s/def ::challenge-type #{"http-01" "dns-01" "tls-alpn-01"})

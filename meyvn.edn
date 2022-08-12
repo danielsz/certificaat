@@ -1,15 +1,12 @@
 {:pom
  {:group-id "org.danielsz",
   :artifact-id "certificaat",
-  :version "2.1.7",
+  :version "2.1.8",
   :name "certificaat"},
  :packaging
  {:uberjar
   {:enabled false,
    :main-class "main.core",
-   :remote-repository
-   {:id "ssh-repository",
-    :url "scpexe://user@domain:/home/.m2/repository"},
    :excludes
    {:artifacts ["org.clojure:google-closure-library"],
     :filters
@@ -74,5 +71,4 @@
    :tools-deps-alias :figwheel}},
  :graalvm {:enabled false, :with-https false},
  :profiles {:enabled false}
- :distribution-management
-   {:id "clojars", :url "https://clojars.org/repo"}}
+ :distribution-management {:id "clojars", :url "https://clojars.org/repo"}}
