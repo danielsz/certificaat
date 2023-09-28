@@ -19,7 +19,7 @@ Certificaat is optimized for a specific workflow: retrieve a certificate for you
 In your ~deps.edn~, add an alias for ~certificaat~.
 
 #+begin_src clojure
-:aliases {:certificaat {:extra-deps {org.danielsz/certificaat {:mvn/version "2.x.x"}}
+:aliases {:certificaat {:extra-deps {org.danielsz/certificaat {:mvn/version "2.1.8"}}
                         :extra-paths ["resources"]
                         :main-opts ["-m" "certificaat.core"]}}
 #+end_src
@@ -27,7 +27,7 @@ In your ~deps.edn~, add an alias for ~certificaat~.
 You can now invoke it like this:
 
 #+begin_src sh
-$ clj -M:certificaat
+$ clj -A:certificaat
 #+end_src
 
 It is recommended to create an executable file in your path for ease of use.
