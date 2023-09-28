@@ -33,7 +33,7 @@ $ clj -A:certificaat
 It is recommended to create an executable file in your path for ease of use.
 
 #+begin_src sh
-$ echo 'clj -M:certificaat  "$@"' > /usr/local/bin/certificaat
+$ echo 'clj -A:certificaat  "$@"' > /usr/local/bin/certificaat
 $ chmod u+x /usr/local/bin/certificaat
 #+end_src
 
